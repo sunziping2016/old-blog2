@@ -1,0 +1,42 @@
+diff --git a/node_modules/vitepress/dist/client/theme-default/index.d.ts b/node_modules/vitepress/dist/client/theme-default/index.d.ts
+index fb57816..585d3c8 100644
+--- a/node_modules/vitepress/dist/client/theme-default/index.d.ts
++++ b/node_modules/vitepress/dist/client/theme-default/index.d.ts
+@@ -3,6 +3,5 @@ import './styles/layout.css';
+ import './styles/code.css';
+ import './styles/custom-blocks.css';
+ import './styles/sidebar-links.css';
+-import { Theme } from 'vitepress';
+-declare const theme: Theme;
++declare const theme: any;
+ export default theme;
+diff --git a/node_modules/vitepress/dist/node/markdown/markdown.d.ts b/node_modules/vitepress/dist/node/markdown/markdown.d.ts
+index decd902..d0ebb6f 100644
+--- a/node_modules/vitepress/dist/node/markdown/markdown.d.ts
++++ b/node_modules/vitepress/dist/node/markdown/markdown.d.ts
+@@ -1,4 +1,4 @@
+-import MarkdownIt from 'markdown-it';
++import * as MarkdownIt from 'markdown-it';
+ import { Header } from '../../../types/shared';
+ export interface MarkdownOptions extends MarkdownIt.Options {
+     lineNumbers?: boolean;
+diff --git a/node_modules/vitepress/dist/node/shared/config.d.ts b/node_modules/vitepress/dist/node/shared/config.d.ts
+index 5fb40d0..d7ca4f3 100644
+--- a/node_modules/vitepress/dist/node/shared/config.d.ts
++++ b/node_modules/vitepress/dist/node/shared/config.d.ts
+@@ -1,4 +1,4 @@
+-import { SiteData } from '/@types/shared';
++import { SiteData } from '../../../types/shared';
+ export declare function resolveSiteDataByRoute(siteData: SiteData, route: string): {
+     themeConfig: any;
+     locales: {};
+diff --git a/node_modules/vitepress/types/index.d.ts b/node_modules/vitepress/types/index.d.ts
+index fb753f9..19b8b03 100644
+--- a/node_modules/vitepress/types/index.d.ts
++++ b/node_modules/vitepress/types/index.d.ts
+@@ -1,5 +1,4 @@
+ export * from './shared'
+ export * from '../dist/node/index'
+-export * from '../dist/client/app/exports'
+ export * from '../dist/client/theme-default/config'
+ export { default as defaultTheme } from '../dist/client/theme-default/index'
