@@ -6,7 +6,7 @@ import {
   RouteRecordRaw
 } from 'vue-router'
 import { store } from './store'
-import { inBrowser } from './utils';
+import { inBrowser } from './utils'
 
 function pathToFile(path: string): string {
   let pagePath = path.replace(/\.html$/, '')
@@ -36,10 +36,12 @@ function loadPageModule(path: string): Component | Promise<Component> {
   return require(pageFilePath)
 }
 
-const routes: RouteRecordRaw[] = [{
-  path: '/:pathMatch(.*)*',
-  component: () => loadPageModule(location.pathname)  // TODO: base?
-}]
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/:pathMatch(.*)*',
+    component: () => loadPageModule(location.pathname) // TODO: base?
+  }
+]
 
 export const routerKey: InjectionKey<Router> = Symbol()
 

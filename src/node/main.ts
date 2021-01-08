@@ -1,16 +1,20 @@
-import * as path from 'path';
-import { createServer, ViteDevServer } from 'vite';
+import path from 'path'
+import { createServer, ViteDevServer } from 'vite'
 import createVuePlugin from '@vitejs/plugin-vue'
-import * as fs from 'fs-extra';
-import * as chalk from 'chalk';
-import { SiteData, UserConfig } from '/@shared/config';
-import MarkdownIt from 'markdown-it';
+import fs from 'fs-extra'
+import chalk from 'chalk'
+import { SiteData, UserConfig } from '/@shared/config'
+import MarkdownIt from 'markdown-it'
 import matter from 'gray-matter'
+import { promisify } from 'util'
 // import slash from 'slash';
 
 export const ROOT_PATH = path.join(__dirname, '../../site')
 export const APP_PATH = path.join(__dirname, '../client/app')
-export const DEFAULT_THEME_PATH = path.join(__dirname, '../client/theme-default')
+export const DEFAULT_THEME_PATH = path.join(
+  __dirname,
+  '../client/theme-default'
+)
 
 export const HTML_TEMPLATE = `\
 <!DOCTYPE html>
@@ -52,7 +56,8 @@ const md = MarkdownIt({
 })
 
 async function main(): Promise<void> {
-  const userConfig = await resolveUserConfig(ROOT_PATH);
+  // Load config
+  const userConfig = await resolveUserConfig(ROOT_PATH)
   const siteData: SiteData = {
     lang: userConfig.lang || 'en-US',
     title: userConfig.title || 'VitePress',
@@ -60,6 +65,7 @@ async function main(): Promise<void> {
     base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/'
   }
 
+  // Load data
   const server = await createServer({
     root: ROOT_PATH,
     plugins: [
@@ -108,6 +114,9 @@ async function main(): Promise<void> {
               next()
             })
           }
+        },
+        async handleHotUpdate(ctx) {
+          console.log(ctx.file, ctx.modules.length)
         }
       },
       createVuePlugin({
@@ -119,7 +128,7 @@ async function main(): Promise<void> {
   await server.listen()
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err)
   process.exit(1)
 })

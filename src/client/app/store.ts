@@ -1,6 +1,6 @@
 import { InjectionKey } from 'vue'
 import { createStore, Store } from 'vuex'
-import { SiteData } from '/@shared/config';
+import { SiteData } from '/@shared/config'
 import serializedSiteData from '@siteData'
 
 export interface State {

@@ -2,8 +2,8 @@ import 'vite/dynamic-import-polyfill'
 import { App, createApp, createSSRApp, h } from 'vue'
 import { store, storeKey } from './store'
 import Theme from '/@theme/index'
-import { Content } from './mixin';
-import { router } from './router';
+import { Content } from './mixin'
+import { router } from './router'
 
 function newApp(): App {
   const app = {
@@ -13,9 +13,7 @@ function newApp(): App {
     }
   }
 
-  return import.meta.env.PROD
-    ? createSSRApp(app)
-    : createApp(app)
+  return import.meta.env.PROD ? createSSRApp(app) : createApp(app)
 }
 
 const app = newApp()
