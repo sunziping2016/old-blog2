@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "../../dist/client",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "declaration": true,
+    "jsx": "preserve",
+    "lib": ["esnext", "dom"],
+    "sourceMap": true,
+    "types": [
+      "vite/client",
+      "node"
+    ],
+    "paths": {
+      "/@shared/*": ["../shared/*"],
+      "/@theme/*": ["theme-default/*"]
+    },
+    "rootDir": "."
+  },
+  "include": [
+    ".",
+    "../shared"
+  ]
+}

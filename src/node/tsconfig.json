@@ -1,23 +1,21 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "module": "CommonJS",
+    "outDir": "../../dist/node",
+    "module": "commonjs",
     "moduleResolution": "node",
     "strict": true,
     "declaration": true,
-    "jsx": "preserve",
     "lib": ["esnext", "dom"],
-    "types": ["node"],
     "sourceMap": true,
-    "outDir": "dist",
+    "esModuleInterop": true,
     "paths": {
-      "@/*": ["src/*"]
+      "/@shared/*": ["../shared/*"],
+      "/@theme/*": ["../client/theme-default/*"]
     }
   },
   "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules"
+    ".",
+    "../shared"
   ]
 }

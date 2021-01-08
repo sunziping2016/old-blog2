@@ -1,9 +1,7 @@
 {
   "watch": [
-    "src",
-    "config",
-    "app.ts"
+    "src"
   ],
-  "ext": "ts,json",
-  "exec": "yarn lint && yarn build && node -r source-map-support/register dist/main.js"
+  "ext": "ts,vue,json",
+  "exec": "yarn lint && yarn build && node -r source-map-support/register dist/node/main.js"
 }
