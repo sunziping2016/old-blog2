@@ -10,8 +10,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "paths": {
-      "/@shared/*": ["../shared/*"],
-      "/@theme/*": ["../client/theme-default/*"]
+      "/@shared/*": ["../shared/*"]
     }
   },
   "include": [

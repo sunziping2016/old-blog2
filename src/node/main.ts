@@ -6,8 +6,6 @@ import chalk from 'chalk'
 import { SiteData, UserConfig } from '/@shared/config'
 import MarkdownIt from 'markdown-it'
 import matter from 'gray-matter'
-import { promisify } from 'util'
-// import slash from 'slash';
 
 export const ROOT_PATH = path.join(__dirname, '../../site')
 export const APP_PATH = path.join(__dirname, '../client/app')

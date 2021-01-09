@@ -3,5 +3,5 @@
     "src"
   ],
   "ext": "ts,vue,json",
-  "exec": "yarn lint && yarn build && node -r source-map-support/register dist/node/main.js"
+  "exec": "yarn lint && yarn build && yarn start"
 }
