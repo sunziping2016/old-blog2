@@ -8,12 +8,24 @@
   ],
   "scripts": {
     "watch": "nodemon",
-    "lint:vitepress": "cd packages/@oak-tree-house/pluggable-vitepress && yarn run lint",
+    "lint": "eslint \"packages/@oak-tree-house/pluggable-vitepress/{scripts,src}/**/*.{js,ts,vue}\"",
+    "format:js": "prettier --check --write \"packages/@oak-tree-house/pluggable-vitepress/scripts/**/*.js\"",
+    "format:ts": "prettier --check --write --parser typescript \"packages/@oak-tree-house/pluggable-vitepress/src/**/*.ts\"",
     "build:vitepress": "cd packages/@oak-tree-house/pluggable-vitepress && yarn run build",
     "start": "pluggable-vitepress dev --root site",
-    "postinstall": "lerna link"
+    "postinstall": "lerna link && husky install"
   },
-  "dependencies": {
-    "lerna": "^3.22.1"
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.12.0",
+    "@typescript-eslint/parser": "^4.12.0",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "@vue/eslint-config-typescript": "^7.0.0",
+    "eslint": "^7.17.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-vue": "^7.4.1",
+    "husky": "^5.0.6",
+    "lerna": "^3.22.1",
+    "nodemon": "^2.0.7",
+    "prettier": "^2.2.1"
   }
 }

@@ -8,7 +8,7 @@ import MarkdownIt from 'markdown-it'
 import matter from 'gray-matter'
 import minimist from 'minimist'
 
-const argv: any = minimist(process.argv.slice(2))
+const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
 export const root = argv.root
 export const APP_PATH = path.join(__dirname, '../client/app')

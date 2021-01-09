@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "description": "Rewrite a pluggable VitePress",
   "main": "dist/node/index.js",
+  "types": "dist/node/index.d.ts",
   "bin": {
     "pluggable-vitepress": "bin/pluggable-vitepress.js"
   },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "scripts": {
     "build": "rimraf -rf dist && tsc -p src/client && tsc -p src/node && node scripts/copyClient.js",
-    "lint": "yarn run lint:js && yarn run lint:ts",
-    "lint:js": "prettier --check --write \"{scripts,src}/**/*.js\"",
-    "lint:ts": "prettier --check --write --parser typescript \"{scripts,src}/**/*.ts\"",
     "start": "node -r source-map-support/register dist/node/cli.js dev"
   },
   "repository": {
@@ -41,8 +43,6 @@
     "@types/fs-extra": "^9.0.6",
     "@types/markdown-it": "^12.0.1",
     "@types/node": "^14.14.20",
-    "nodemon": "^2.0.7",
-    "prettier": "^2.2.1",
     "rimraf": "^3.0.2",
     "sass": "^1.32.2",
     "sass-loader": "^10.1.0",

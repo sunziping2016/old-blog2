@@ -17,7 +17,8 @@ export default defineComponent({
       `Looks like we've got some broken links.`
     ])
 
-    const getMsg = () => msgs.value[Math.floor(Math.random() * msgs.value.length)];
+    const getMsg = () =>
+      msgs.value[Math.floor(Math.random() * msgs.value.length)]
 
     return {
       msgs,

@@ -3,5 +3,5 @@
     "packages/@oak-tree-house/pluggable-vitepress/src"
   ],
   "ext": "ts,vue,json",
-  "exec": "yarn run lint:vitepress && yarn run build:vitepress && yarn run start"
+  "exec": "yarn run build:vitepress && yarn run start"
 }
