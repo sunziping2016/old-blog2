@@ -1,0 +1,15 @@
+language: node_js
+dist: bionic
+node_js:
+  - 12
+cache:
+  yarn: true
+env:
+  - BUILD_HOST=travis-ci
+install:
+  - yarn
+script:
+  - yarn run lint
+  - yarn run build
+before_install:
+  - export TZ=Asia/Shanghai
