@@ -21,7 +21,7 @@ The figure below shows the [directory classifier](https://vuepress-plugin-blog.u
 
 ![Index Page Demo](/assets/blog/theme-vuetify-blog-doc/index-demo.png) {.text-center}
 
-The figure below shows the post page. With the help of [@vuepress/plugin-active-header-links](https://v1.vuepress.vuejs.org/plugin/official/plugin-active-header-links.html), the TOC in the sidebar is synchronized with the scrolled content. The style of the main content is generally copied from VuePress default theme. Copy buttons and prompt-toggling buttons are added to the code blocks by extra plugins. The main content also supports $\LaTeX$ and Gitalk comment system powered by my plugins.
+The figure below shows the post page. With the help of [@vuepress/plugin-active-header-links](https://v1.vuepress.vuejs.org/plugin/official/plugin-active-header-links.html), the TOC in the sidebar is synchronized with the scrolled content. The style of the cli content is generally copied from VuePress default theme. Copy buttons and prompt-toggling buttons are added to the code blocks by extra plugins. The cli content also supports $\LaTeX$ and Gitalk comment system powered by my plugins.
 
 ![Post Page Demo](/assets/blog/theme-vuetify-blog-doc/post-demo.jpg) {.text-center}
 

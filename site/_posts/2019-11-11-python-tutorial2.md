@@ -1172,7 +1172,7 @@ IDE通常将一个Python项目组织成工程。让我们来创建一个工程�
 
 ![IDEA Project Window](/assets/blog/python-tutorial2/idea-project-window.png) {.text-center}
 
-然后右键项目的根目录（这里是写着`hello`高亮出来的一行）-> New -> Python File，创建一个文件（不需要输入后缀名），比如下面图中所示的`main.py`：
+然后右键项目的根目录（这里是写着`hello`高亮出来的一行）-> New -> Python File，创建一个文件（不需要输入后缀名），比如下面图中所示的`cli.py`：
 
 ![IDEA New File](/assets/blog/python-tutorial2/idea-new-file.png) {.text-center}
 
@@ -1195,7 +1195,7 @@ if __name__ == '__main__':
 
 ![IDEA Add Code](/assets/blog/python-tutorial2/idea-add-code.png) {.text-center}
 
-注意到`if`语句的左侧有个绿色的箭头，这就是运行的按钮。点击一下会出现一个菜单，选择Run 'main'就可以运行起来，这时底部会弹出一个窗口，效果就像下面这样：
+注意到`if`语句的左侧有个绿色的箭头，这就是运行的按钮。点击一下会出现一个菜单，选择Run 'cli'就可以运行起来，这时底部会弹出一个窗口，效果就像下面这样：
 
 ![IDEA Run Window](/assets/blog/python-tutorial2/idea-run-window.png) {.text-center}
 

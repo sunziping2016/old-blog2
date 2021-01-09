@@ -35,13 +35,13 @@ def fib(n):   # 返回小于n的斐波那契数列
         a, b = b, a+b
     return result
 
-def main():
+def cli():
     print('Fibonacci less than 100:')
     for i in fib(100):
         print(i)
 
 if __name__ == '__main__':
-    main()
+    cli()
 ```
 
 然后你可以执行它，就像我们先前做的那样，这时`fib.py`这个文件就成了主模块，`__name__`的值为`'__main__'`，`if`语句成立。
@@ -75,13 +75,13 @@ def fib(n):   # 返回小于n的斐波那契数列
         a, b = b, a+b
     return result
 
-def main():
+def cli():
     print('Fibonacci less than 100:')
     for i in fib(100):
         print(i)
 
 if __name__ == '__main__':
-    main()
+    cli()
 ```
 
 在同一目录添加一个`foo.py`，内容如下：
@@ -110,7 +110,7 @@ Python->foo.py:"import foo"\nstarted
 foo.py->fibonacci.py:"import fibonacci"\nstarted
 Note right of fibonacci.py: "print('initializing\n fibonacci')"
 Note right of fibonacci.py: "def fib(n):\n..."
-Note right of fibonacci.py: "def main():\n..."
+Note right of fibonacci.py: "def cli():\n..."
 Note right of fibonacci.py: "if __name__ == '__main__':\n..."
 fibonacci.py->foo.py:"import fibonacci"\nfinished
 Note right of foo.py: "print('initializing\n foo')"
@@ -130,7 +130,7 @@ foo.py->Python:"import foo"\nfinished
 首先你可以使用`from module import name1, name2`只导入模块中的某些全局对象：
 
 ```python
->>> from fibonacci import fib, main
+>>> from fibonacci import fib, cli
 initializing fibonacci
 ```
 

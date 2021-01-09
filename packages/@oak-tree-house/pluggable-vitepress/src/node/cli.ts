@@ -6,8 +6,11 @@ import chalk from 'chalk'
 import { SiteData, UserConfig } from '/@shared/config'
 import MarkdownIt from 'markdown-it'
 import matter from 'gray-matter'
+import minimist from 'minimist'
 
-export const ROOT_PATH = path.join(__dirname, '../../site')
+const argv: any = minimist(process.argv.slice(2))
+
+export const root = argv.root
 export const APP_PATH = path.join(__dirname, '../client/app')
 export const DEFAULT_THEME_PATH = path.join(
   __dirname,
@@ -55,7 +58,7 @@ const md = MarkdownIt({
 
 async function main(): Promise<void> {
   // Load config
-  const userConfig = await resolveUserConfig(ROOT_PATH)
+  const userConfig = await resolveUserConfig(root)
   const siteData: SiteData = {
     lang: userConfig.lang || 'en-US',
     title: userConfig.title || 'VitePress',
@@ -65,7 +68,7 @@ async function main(): Promise<void> {
 
   // Load data
   const server = await createServer({
-    root: ROOT_PATH,
+    root: root,
     plugins: [
       {
         name: 'oak-press',

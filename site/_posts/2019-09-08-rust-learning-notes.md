@@ -311,10 +311,10 @@ $ ls my-project
 Cargo.toml
 src
 $ ls my-project/src
-main.rs
+cli.rs
 ```
 
-`Cargo.toml`没有提到`src/main.rs`，因为Cargo遵循了这样一个约定：`src/main.rs`是与包同名的binary crate的根。同样的，如果包目录下`src/lib.rs`，那这是与包同名的library crate的根。Cargo会将crate root传递给`rustc`来编译。此外可以在`src/bin`目录下添加多个源文件，每个源文件都是独立的binary crate。
+`Cargo.toml`没有提到`src/cli.rs`，因为Cargo遵循了这样一个约定：`src/cli.rs`是与包同名的binary crate的根。同样的，如果包目录下`src/lib.rs`，那这是与包同名的library crate的根。Cargo会将crate root传递给`rustc`来编译。此外可以在`src/bin`目录下添加多个源文件，每个源文件都是独立的binary crate。
 
 ### 5.2 定义模块来控制作用域和隐私
 
@@ -516,7 +516,7 @@ panic = 'abort'
 `panic!`如下使用：
 
 ```rust
-fn main() {
+fn cli() {
     panic!("crash and burn");
 }
 ```
@@ -553,13 +553,13 @@ fn read_username_from_file() -> Result<String, io::Error> {
 }
 ```
 
-注意`?`运算符只能在返回`Result`的函数内调用。`main`函数也可以返回`Result`，如下，这里`Box<dyn Error>`是个trait对象，表示一切错误：
+注意`?`运算符只能在返回`Result`的函数内调用。`cli`函数也可以返回`Result`，如下，这里`Box<dyn Error>`是个trait对象，表示一切错误：
 
 ```rust
 use std::error::Error;
 use std::fs::File;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn cli() -> Result<(), Box<dyn Error>> {
     let f = File::open("hello.txt")?;
     Ok(())
 }
@@ -897,7 +897,7 @@ fn hello(name: &str) {
     println!("Hello, {}!", name);
 }
 
-fn main() {
+fn cli() {
     let m = MyBox::new(String::from("Rust"));
     hello(&m);
 }
@@ -949,7 +949,7 @@ fn main() {
 use std::sync::mpsc;
 use std::thread;
 
-fn main() {
+fn cli() {
     let (tx, rx) = mpsc::channel();
 
     thread::spawn(move || {
@@ -972,7 +972,7 @@ fn main() {
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-fn main() {
+fn cli() {
     let counter = Arc::new(Mutex::new(0));
     let mut handles = vec![];
 
@@ -1142,7 +1142,7 @@ fn add_to_count(inc: u32) {
     }
 }
 
-fn main() {
+fn cli() {
     add_to_count(3);
 
     unsafe {
@@ -1194,7 +1194,7 @@ impl fmt::Display for Wrapper {
     }
 }
 
-fn main() {
+fn cli() {
     let w = Wrapper(vec![String::from("hello"), String::from("world")]);
     println!("w = {}", w);
 }

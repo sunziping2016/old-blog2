@@ -4,7 +4,7 @@ date: 2019-09-08T07:39:02Z
 tags: [工作]
 ---
 
-原文由$\LaTeX$编写，点击[此处](/assets/blog/microsoft-intern-summary/main.pdf)下载报告原文，点击[此处](/assets/blog/microsoft-intern-summary/slides.pdf)下载幻灯片。
+原文由$\LaTeX$编写，点击[此处](/assets/blog/microsoft-intern-summary/cli.pdf)下载报告原文，点击[此处](/assets/blog/microsoft-intern-summary/slides.pdf)下载幻灯片。
 
 <!-- more -->
 

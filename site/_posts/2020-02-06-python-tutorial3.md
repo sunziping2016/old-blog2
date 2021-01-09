@@ -1833,7 +1833,7 @@ def mandelbrot(c):
     pass
 
 
-def main():
+def cli():
     resolution = 512
     c = np.linspace(-2, 1, resolution)[np.newaxis, :] \
         + 1j * np.linspace(-1.5, 1.5, resolution)[:, np.newaxis]
@@ -1843,7 +1843,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    cli()
 ```
 
 #### 样例输出

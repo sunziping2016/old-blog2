@@ -1,7 +1,7 @@
 {
   "watch": [
-    "src"
+    "packages/@oak-tree-house/pluggable-vitepress/src"
   ],
   "ext": "ts,vue,json",
-  "exec": "yarn lint && yarn build && yarn start"
+  "exec": "yarn run lint:vitepress && yarn run build:vitepress && yarn run start"
 }

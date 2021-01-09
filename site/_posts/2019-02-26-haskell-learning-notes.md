@@ -283,7 +283,7 @@ fmap函数取一个函数和封装的数据，将函数应用到被封装的数�
 像诸如putStrLn返回的类型是`IO ()`，其中`()`是空元组。可以通过`do`将多个I/O操作合并成为一个操作，以`putStrLn`和`getLine`为例，如下：
 
 ```haskell
-main = do
+cli = do
     putStrLn "Hello, what's your name?"
     name <- getLine
     ...

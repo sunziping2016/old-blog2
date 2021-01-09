@@ -128,7 +128,7 @@ T const& max(T const& a, T const& b, T const& c)
   // 我的注释：这里对于T: const char *来讲，两个max都是匹配到的非模板函数版本
 }
 
-int main ()
+int cli ()
 {
   char const* s1 = "frederic";
   char const* s2 = "anica";
@@ -162,7 +162,7 @@ int max (int a, int b)
   return b < a ? a : b;
 }
 
-int main()
+int cli()
 {
   ::max(47,11,33); // OOPS: uses max<T>() instead of max(int,int)
 }
