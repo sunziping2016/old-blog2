@@ -1,0 +1,32 @@
+{
+  "name": "@oak-tree-house/vitepress-plugin-blog",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sunziping2016/oak-tree-house-next.git"
+  },
+  "author": "Sun Ziping",
+  "license": "MIT",
+  "homepage": "https://github.com/sunziping2016/oak-tree-house-next#readme",
+  "bugs": {
+    "url": "https://github.com/sunziping2016/oak-tree-house-next/issues"
+  },
+  "dependencies": {
+    "@oak-tree-house/pluggable-vitepress": "^0.1.0",
+    "dayjs": "^1.10.3",
+    "fs-extra": "^9.0.1",
+    "globby": "^11.0.2",
+    "gray-matter": "^4.0.2",
+    "slash": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.1.3"
+  }
+}

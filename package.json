@@ -8,10 +8,11 @@
   ],
   "scripts": {
     "watch": "nodemon",
-    "lint": "eslint \"packages/@oak-tree-house/pluggable-vitepress/{scripts,src}/**/*.{js,ts,vue}\"",
+    "lint": "eslint \"packages/@oak-tree-house/{pluggable-vitepress,vitepress-plugin-blog}/{scripts,src}/**/*.{js,ts,vue}\"",
     "format:js": "prettier --check --write \"packages/@oak-tree-house/pluggable-vitepress/scripts/**/*.js\"",
     "format:ts": "prettier --check --write --parser typescript \"packages/@oak-tree-house/pluggable-vitepress/src/**/*.ts\"",
     "build:vitepress": "cd packages/@oak-tree-house/pluggable-vitepress && yarn run build",
+    "build:plugin-blog": "cd packages/@oak-tree-house/vitepress-plugin-blog && yarn run build",
     "start": "pluggable-vitepress dev --root site",
     "postinstall": "lerna link && husky install"
   },
@@ -27,5 +28,8 @@
     "lerna": "^3.22.1",
     "nodemon": "^2.0.7",
     "prettier": "^2.2.1"
+  },
+  "dependencies": {
+    "@oak-tree-house/vitepress-plugin-blog": "^0.1.0"
   }
 }

@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf -rf dist && tsc -p src/client && tsc -p src/node && node scripts/copyClient.js",
+    "build": "rimraf -rf dist && tsc -p src/client && tsc -p src/node && node scripts/copyFiles.js",
     "start": "node -r source-map-support/register dist/node/cli.js dev"
   },
   "repository": {
@@ -33,7 +33,10 @@
     "globby": "^11.0.2",
     "gray-matter": "^4.0.2",
     "markdown-it": "^12.0.4",
+    "markdown-it-emoji": "^2.0.0",
     "minimist": "^1.2.5",
+    "querystring": "^0.2.0",
+    "slash": "^3.0.0",
     "vite": "^2.0.0-beta.11",
     "vue": "^3.0.5",
     "vue-router": "^4.0.2",

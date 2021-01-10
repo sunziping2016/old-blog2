@@ -12,7 +12,6 @@ function newApp(): App {
       return () => h(Theme.Layout)
     }
   }
-
   return import.meta.env.PROD ? createSSRApp(app) : createApp(app)
 }
 

@@ -1,16 +1,17 @@
 import path from 'path'
 import { createServer, ViteDevServer } from 'vite'
 import createVuePlugin from '@vitejs/plugin-vue'
-import fs from 'fs-extra'
-import chalk from 'chalk'
-import { SiteData, UserConfig } from '/@shared/config'
 import MarkdownIt from 'markdown-it'
-import matter from 'gray-matter'
+import qs from 'querystring'
 import minimist from 'minimist'
+import { resolvePath, resolveUserConfig } from './config'
+import { SiteData } from '../shared/config'
+import { PluginApi, VitepressPluginContext } from './plugin'
+import { createMarkdownRender, transformMarkdown } from './markdown'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
-export const root = argv.root
+export const root = argv.root || path.join(__dirname, './docs.fallback')
 export const APP_PATH = path.join(__dirname, '../client/app')
 export const DEFAULT_THEME_PATH = path.join(
   __dirname,
@@ -36,31 +37,29 @@ export const HTML_TEMPLATE = `\
 export const SITE_DATA_ID = '@siteData'
 export const SITE_DATA_REQUEST_PATH = '/' + SITE_DATA_ID
 
-async function resolveUserConfig(root: string): Promise<UserConfig> {
-  // load user config
-  const configPath = path.resolve(root, 'config.js')
-  const hasUserConfig = await fs.pathExists(configPath)
-  // always delete cache first before loading config
-  delete require.cache[configPath]
-  const userConfig: UserConfig = hasUserConfig ? require(configPath) : {}
-  if (hasUserConfig) {
-    console.info(`loaded config at ${chalk.yellow(configPath)}`)
-  } else {
-    console.info(`no config file found.`)
-  }
-  return userConfig
-}
-
-const md = MarkdownIt({
-  html: true,
-  linkify: true
-})
-
 async function main(): Promise<void> {
   // Load config
-  const userConfig = await resolveUserConfig(root)
+  const userConfigPath = resolvePath(root, 'config.js')
+  const userConfig = await resolveUserConfig(userConfigPath)
+  const pluginContext: VitepressPluginContext = {
+    isProd: false,
+    sourceDir: root
+  }
+  const pluginApi = await PluginApi.loadPlugins(
+    userConfig.plugins || [],
+    pluginContext,
+    resolvePath(root, '.')
+  )
+  // Markdown
+  const md = MarkdownIt(
+    pluginApi.applyConfigMarkdown({
+      html: true,
+      linkify: true
+    })
+  )
+  const renderer = createMarkdownRender(md)
+
   const siteData: SiteData = {
-    lang: userConfig.lang || 'en-US',
     title: userConfig.title || 'VitePress',
     description: userConfig.description || 'A VitePress site',
     base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/'
@@ -70,6 +69,7 @@ async function main(): Promise<void> {
   const server = await createServer({
     root: root,
     plugins: [
+      ...pluginApi.getVitePlugins(),
       {
         name: 'oak-press',
         config() {
@@ -93,15 +93,22 @@ async function main(): Promise<void> {
         },
         load(id) {
           if (id === SITE_DATA_REQUEST_PATH) {
-            return `export default ${JSON.stringify(JSON.stringify(siteData))}`
+            return `export default ${JSON.stringify(siteData)}`
           }
         },
-        transform(code, id) {
-          if (id.endsWith('.md')) {
-            // const relativePath = slash(path.relative(ROOT_PATH, id))
-            const { content } = matter(code)
-            const html = md.render(content)
-            return `<template><div>${html}</div></template>`
+        async transform(code, id) {
+          const [filename, rawQuery] = id.split(`?`, 2)
+          const query = qs.parse(rawQuery || '')
+          if (filename.endsWith('.md')) {
+            return await transformMarkdown(
+              renderer,
+              {
+                excerpt: query.excerpt !== undefined
+              },
+              root,
+              code,
+              filename
+            )
           }
         },
         configureServer(server: ViteDevServer) {

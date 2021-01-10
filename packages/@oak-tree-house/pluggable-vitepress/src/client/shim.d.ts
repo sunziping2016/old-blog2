@@ -1,5 +1,3 @@
-declare const __OAK_HASH_MAP__: Record<string, string>
-
 declare module '*.vue' {
   import { ComponentOptions } from 'vue'
   const comp: ComponentOptions
@@ -7,6 +5,11 @@ declare module '*.vue' {
 }
 
 declare module '@siteData' {
-  const data: string
+  const data: never
+  export default data
+}
+
+declare module '@blogData' {
+  const data: never
   export default data
 }

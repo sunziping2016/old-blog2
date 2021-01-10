@@ -1,51 +1,82 @@
-import { Component, InjectionKey } from 'vue'
-import {
-  createRouter,
-  createWebHistory,
-  Router,
-  RouteRecordRaw
-} from 'vue-router'
+import { InjectionKey } from 'vue'
+import { createRouter, createWebHistory, Router } from 'vue-router'
 import { store } from './store'
-import { inBrowser } from './utils'
+import { Content } from './mixin'
+import blogData from '@blogData'
+import Theme from '/@theme/index'
 
-function pathToFile(path: string): string {
-  let pagePath = path.replace(/\.html$/, '')
-  if (pagePath.endsWith('/')) {
-    pagePath += 'index'
-  }
-  if (import.meta.env.DEV) {
-    pagePath += `.md?t=${Date.now()}`
-  } else {
-    if (inBrowser) {
-      const base = import.meta.env.BASE_URL
-      pagePath = pagePath.slice(base.length).replace(/\//g, '_') + '.md'
-      const pageHash = __OAK_HASH_MAP__[pagePath]
-      pagePath = `${base}assets/${pagePath}.${pageHash}.js`
-    } else {
-      pagePath = `./${pagePath.slice(1).replace(/\//g, '_')}.md.js`
-    }
-  }
-  return pagePath
+// TODO: compose them
+export interface BlogDataItem {
+  path: string
+  title: string
+  dirname?: string
+  keys?: string[]
+  lengthPerPage: number
+  totalPages: Record<string, number>
 }
 
-function loadPageModule(path: string): Component | Promise<Component> {
-  const pageFilePath = pathToFile(path)
-  if (inBrowser) {
-    return import(/* @vite-ignore */ pageFilePath)
-  }
-  return require(pageFilePath)
-}
-
-const routes: RouteRecordRaw[] = [
-  {
-    path: '/:pathMatch(.*)*',
-    component: () => loadPageModule(location.pathname) // TODO: base?
-  }
-]
+export type BlogData = Record<string, BlogDataItem>
 
 export const routerKey: InjectionKey<Router> = Symbol()
 
 export const router = createRouter({
   history: createWebHistory(store.state.siteData.base),
-  routes
+  routes: []
 })
+
+function addContentRoute() {
+  router.addRoute({
+    name: 'content',
+    path: '/:pathMatch(.*)*',
+    component: Content // TODO: base?
+  })
+}
+
+// function removeContentRoute() {
+//   router.removeRoute('fallback')
+// }
+
+function addBlogRoute(blogData: BlogData) {
+  if (Object.keys(blogData).length) {
+    for (const [id, data] of Object.entries(blogData)) {
+      if (data.keys === undefined) {
+        router.addRoute({
+          name: `${id}-first`,
+          path: data.path,
+          component: Theme.IndexPost,
+          meta: {
+            id,
+            key: 'all'
+          }
+        })
+        if (data.totalPages.all > 1) {
+          router.addRoute({
+            name: `${id}-rest`,
+            path: data.path + 'page/:page/',
+            component: Theme.IndexPost,
+            meta: {
+              id,
+              key: 'all'
+            }
+          })
+        }
+      } else {
+        // TODO
+      }
+    }
+  }
+}
+
+addBlogRoute(blogData)
+addContentRoute()
+
+console.log(router.getRoutes())
+
+if (import.meta.hot) {
+  import.meta.hot?.on(
+    'plugin-blog:blogData',
+    ({ updatedClassifier, blogData }) => {
+      console.log(updatedClassifier, blogData)
+    }
+  )
+}

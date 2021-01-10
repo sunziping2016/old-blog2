@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "../../dist/node",
+    "outDir": "../dist",
     "module": "commonjs",
     "moduleResolution": "node",
     "strict": true,
@@ -9,10 +9,6 @@
     "lib": ["esnext", "dom"],
     "sourceMap": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true
-  },
-  "include": [
-    ".",
-    "../shared"
-  ]
+    "downlevelIteration": true
+  }
 }
