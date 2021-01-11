@@ -70,13 +70,8 @@ function addBlogRoute(blogData: BlogData) {
 addBlogRoute(blogData)
 addContentRoute()
 
-console.log(router.getRoutes())
-
 if (import.meta.hot) {
-  import.meta.hot?.on(
-    'plugin-blog:blogData',
-    ({ updatedClassifier, blogData }) => {
-      console.log(updatedClassifier, blogData)
-    }
-  )
+  import.meta.hot?.on('plugin-blog:blogData', () => {
+    // TODO
+  })
 }

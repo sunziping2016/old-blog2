@@ -15,7 +15,7 @@ function newApp(): App {
   return import.meta.env.PROD ? createSSRApp(app) : createApp(app)
 }
 
-console.log(import.meta.hot)
+void import.meta.hot
 
 const app = newApp()
 app.use(store, storeKey)

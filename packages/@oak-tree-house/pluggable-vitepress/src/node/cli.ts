@@ -7,7 +7,12 @@ import minimist from 'minimist'
 import { resolvePath, resolveUserConfig } from './config'
 import { SiteData } from '../shared/config'
 import { PluginApi, VitepressPluginContext } from './plugin'
-import { createMarkdownRender, transformMarkdown } from './markdown'
+import {
+  createMarkdownRender,
+  exportMarkdown,
+  exportMarkdownExcerpt,
+  exportMarkdownPageData
+} from './markdown'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
@@ -65,6 +70,43 @@ async function main(): Promise<void> {
     base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/'
   }
 
+  const vuePlugin = createVuePlugin({
+    include: [/\.vue$/, /\.md$/],
+    ssr: false
+  })
+  const originVuePluginTransform = vuePlugin.transform
+  if (originVuePluginTransform !== undefined) {
+    vuePlugin.transform = async function (code, id) {
+      const [filename, rawQuery] = id.split(`?`, 2)
+      const query = qs.parse(rawQuery || '')
+      if (!filename.endsWith('.md') || query.pageData === undefined) {
+        return await originVuePluginTransform.call(this, code, id)
+      }
+    }
+  }
+  const originVueHandleHotUpdate = vuePlugin.handleHotUpdate
+  if (originVueHandleHotUpdate !== undefined) {
+    vuePlugin.handleHotUpdate = async function (ctx) {
+      const extra_module = ctx.modules.find((module) => {
+        if (module.id === null) {
+          return false
+        }
+        const [filename, rawQuery] = module.id.split(`?`, 2)
+        const query = qs.parse(rawQuery || '')
+        return filename.endsWith('.md') && query.pageData !== undefined
+      })
+      if (extra_module !== undefined) {
+        ctx.modules.splice(ctx.modules.indexOf(extra_module), 1)
+      }
+      const modules =
+        (await originVueHandleHotUpdate.call(this, ctx)) || ctx.modules.slice()
+      if (extra_module !== undefined) {
+        modules.push(extra_module)
+      }
+      return modules
+    }
+  }
+
   // Load data
   const server = await createServer({
     root: root,
@@ -82,6 +124,12 @@ async function main(): Promise<void> {
               {
                 find: SITE_DATA_ID,
                 replacement: SITE_DATA_REQUEST_PATH
+              },
+              {
+                find: /^vue$/,
+                replacement: require.resolve(
+                  '@vue/runtime-dom/dist/runtime-dom.esm-bundler.js'
+                )
               }
             ]
           }
@@ -100,15 +148,18 @@ async function main(): Promise<void> {
           const [filename, rawQuery] = id.split(`?`, 2)
           const query = qs.parse(rawQuery || '')
           if (filename.endsWith('.md')) {
-            return await transformMarkdown(
-              renderer,
-              {
-                excerpt: query.excerpt !== undefined
-              },
-              root,
-              code,
-              filename
-            )
+            if (query.pageData !== undefined) {
+              return await exportMarkdownPageData(
+                renderer,
+                root,
+                code,
+                filename
+              )
+            } else if (query.excerpt !== undefined) {
+              return exportMarkdownExcerpt(renderer, root, code)
+            } else {
+              return exportMarkdown(renderer, root, code)
+            }
           }
         },
         configureServer(server: ViteDevServer) {
@@ -124,13 +175,13 @@ async function main(): Promise<void> {
           }
         },
         async handleHotUpdate(ctx) {
-          console.log(ctx.file, ctx.modules.length)
+          console.log(
+            ctx.file,
+            ctx.modules.map((x) => x.id)
+          )
         }
       },
-      createVuePlugin({
-        include: [/\.vue$/, /\.md$/],
-        ssr: false
-      })
+      vuePlugin
     ]
   })
   await server.listen()

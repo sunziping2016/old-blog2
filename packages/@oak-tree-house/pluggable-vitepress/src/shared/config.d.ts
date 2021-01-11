@@ -7,7 +7,6 @@ export interface SiteData {
 export interface PageData {
   relativePath: string
   title: string
-  headers: Header[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   frontmatter: Record<string, any>
   lastUpdated: number

@@ -203,18 +203,32 @@ export class Classifier {
   }
   generateFetchPagesCode(key: string, page: number): string {
     const pages = this.fetchPages(key, page)
-    let result = ''
+    let result = 'import { markRaw, ref } from "vue"\n'
     for (let i = 0; i < pages.length; ++i) {
       const page = pages[i]
-      result +=
-        `import excerpt${i}, { pageData as pageData${i} } ` +
-        `from "/${page.relativePath}?excerpt"\n`
+      result += `import pageData${i} from "/${page.relativePath}?pageData"\n`
     }
-    result += `\nconst data = [${Array.from(
+    for (let i = 0; i < pages.length; ++i) {
+      const page = pages[i]
+      result += `import excerpt${i} from "/${page.relativePath}?excerpt"\n`
+    }
+    result += `\nconst data = ref([\n${Array.from(
       { length: pages.length },
-      (x, i) => `{ excerpt: excerpt${i}, pageData: pageData${i} }`
-    )}]\n`
-    result += 'export default data\n'
+      (x, i) => `  { excerpt: markRaw(excerpt${i}), pageData: pageData${i} },\n`
+    ).join('')}])\n\n`
+    result += 'export default data\n\n'
+    result +=
+      'if (import.meta.hot.accept) {\n' +
+      `${pages
+        .map((page, index) => {
+          return (
+            `  import.meta.hot.accept("/${page.relativePath}?pageData", (dep) => {\n` +
+            `    data.value[${index}].pageData = dep.default\n` +
+            '  })\n'
+          )
+        })
+        .join('')}` +
+      '}\n'
     return result
   }
 }

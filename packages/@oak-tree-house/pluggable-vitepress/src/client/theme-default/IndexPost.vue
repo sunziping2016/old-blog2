@@ -16,7 +16,6 @@ import {
   ComponentOptions,
   defineComponent,
   ref,
-  markRaw,
   computed,
   watchEffect
 } from 'vue'
@@ -38,7 +37,9 @@ export default defineComponent({
     const route = useRoute()
     const id = route.meta.id as string
     const key = route.meta.key as string
-    const page = computed<number>(() => parseInt(route.params.page || '0', 10))
+    const page = computed<number>(() =>
+      parseInt((route.params.page as string) || '0', 10)
+    )
     const classifier = blogDataTyped[id]
     const basePath =
       classifier.keys === undefined
@@ -60,16 +61,21 @@ export default defineComponent({
       // noinspection TypeScriptCheckImport
       import(/* @vite-ignore */ `/@blogData/${id}/${key}/${page.value}`).then(
         (data) => {
-          pages.value = data.default.map(({ excerpt, pageData }) => ({
-            excerpt: markRaw(excerpt),
-            pageData
-          }))
+          pages.value = data.default.value
         }
       )
     })
     const router = useRouter()
-    const goPrevLink = () => router.push(prevLink.value)
-    const goNextLink = () => router.push(nextLink.value)
+    const goPrevLink = () => {
+      if (prevLink.value !== undefined) {
+        router.push(prevLink.value)
+      }
+    }
+    const goNextLink = () => {
+      if (nextLink.value !== undefined) {
+        router.push(nextLink.value)
+      }
+    }
     return {
       pages,
       prevLink,

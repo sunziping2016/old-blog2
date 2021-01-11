@@ -35,36 +35,6 @@ export function createMarkdownRender(md: MarkdownIt): MarkdownRenderer {
   }
 }
 
-const scriptRE = /<\/script>/
-const scriptSetupRE = /<\s*script[^>]*\bsetup\b[^>]*/
-const defaultExportRE = /((?:^|\n|;)\s*)export(\s*)default/
-const namedDefaultExportRE = /((?:^|\n|;)\s*)export(.+)as(\s*)default/
-
-function insertPageDataTag(tags: string[], data: PageData): string[] {
-  tags = tags.slice()
-  const code = `\nexport const pageData = ${JSON.stringify(data)}`
-
-  const existingScriptIndex = tags.findIndex((tag) => {
-    return scriptRE.test(tag) && !scriptSetupRE.test(tag)
-  })
-
-  if (existingScriptIndex > -1) {
-    const tagSrc = tags[existingScriptIndex]
-    // user has <script> tag inside markdown
-    // if it doesn't have export default it will error out on build
-    const hasDefaultExport =
-      defaultExportRE.test(tagSrc) || namedDefaultExportRE.test(tagSrc)
-    tags[existingScriptIndex] = tagSrc.replace(
-      scriptRE,
-      code + (hasDefaultExport ? `` : `\nexport default{}\n`) + `</script>`
-    )
-  } else {
-    tags.unshift(`<script>${code}\nexport default {}</script>`)
-  }
-
-  return tags
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types
 export function inferTitle(frontmatter: any, content: string): string {
   if (frontmatter.title) {
@@ -81,31 +51,51 @@ export interface TransformMarkdownOptions {
   excerpt: boolean
 }
 
-export async function transformMarkdown(
+export async function exportMarkdownPageData(
   renderer: MarkdownRenderer,
-  options: TransformMarkdownOptions,
   root: string,
   src: string,
   file: string
 ): Promise<string> {
   const relativePath = slash(path.relative(root, file))
-  const { content, data: frontmatter, excerpt } = matter(src, {
+  const { content, data: frontmatter } = matter(src, {
     excerpt_separator: '<!-- more -->'
   })
-  const { html: excerptHtml } = excerpt ? renderer(excerpt) : { html: '' }
-  const { html: contentHtml, data } = renderer(content)
-
   const pageData: PageData = {
     title: inferTitle(frontmatter, content),
     frontmatter,
-    headers: data.headers || [],
     relativePath,
     lastUpdated: Math.round((await fs.stat(file)).mtimeMs)
   }
   return (
-    insertPageDataTag(data.hoistedTags || [], pageData).join('\n') +
-    `\n<template><div>${
-      options.excerpt ? excerptHtml : contentHtml
-    }</div></template>`
+    `const pageData = ${JSON.stringify(pageData)}\n\n` +
+    'export default pageData\n'
+  )
+}
+
+export function exportMarkdownExcerpt(
+  renderer: MarkdownRenderer,
+  root: string,
+  src: string
+): string {
+  const { excerpt } = matter(src, {
+    excerpt_separator: '<!-- more -->'
+  })
+  const { html: excerptHtml } = excerpt ? renderer(excerpt) : { html: '' }
+  return `<template><div>${excerptHtml}</div></template>\n`
+}
+
+export function exportMarkdown(
+  renderer: MarkdownRenderer,
+  root: string,
+  src: string
+): string {
+  const { content } = matter(src, {
+    excerpt_separator: '<!-- more -->'
+  })
+  const { html: contentHtml, data } = renderer(content)
+  return (
+    `<template><div>${contentHtml}</div></template>\n` +
+    (data.hoistedTags || []).join('\n')
   )
 }
