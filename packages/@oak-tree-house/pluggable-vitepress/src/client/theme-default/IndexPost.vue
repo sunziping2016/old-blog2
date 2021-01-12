@@ -12,13 +12,7 @@
 </template>
 
 <script lang="ts">
-import {
-  ComponentOptions,
-  defineComponent,
-  ref,
-  computed,
-  watchEffect
-} from 'vue'
+import { ComponentOptions, defineComponent, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { PageData } from '../../shared/config'
 import blogData from '@blogData'
@@ -35,16 +29,16 @@ export default defineComponent({
       }>
     >([])
     const route = useRoute()
-    const id = route.meta.id as string
-    const key = route.meta.key as string
+    const id = computed(() => route.meta.id as string)
+    const key = computed(() => route.meta.key as string)
     const page = computed<number>(() =>
       parseInt((route.params.page as string) || '0', 10)
     )
-    const classifier = blogDataTyped[id]
+    const classifier = blogDataTyped[id.value]
     const basePath =
       classifier.keys === undefined
         ? classifier.path
-        : `${classifier.path}${key}/`
+        : `${classifier.path}${key.value}/`
     const prevLink = computed<string | undefined>(() =>
       page.value === 1
         ? basePath
@@ -53,18 +47,21 @@ export default defineComponent({
         : undefined
     )
     const nextLink = computed<string | undefined>(() =>
-      page.value + 1 < classifier.totalPages[key]
+      page.value + 1 < classifier.totalPages[key.value]
         ? `${basePath}page/${page.value + 1}/`
         : undefined
     )
-    watchEffect(() => {
-      // noinspection TypeScriptCheckImport
-      import(/* @vite-ignore */ `/@blogData/${id}/${key}/${page.value}`).then(
-        (data) => {
-          pages.value = data.default.value
-        }
-      )
-    })
+    const reloadPages = () => {
+      console.log('reloading', id.value, key.value, page.value)
+      return import(
+        /* @vite-ignore */ `/@blogData/${id.value}/${key.value}/${page.value}?` +
+          `t=${Date.now()}`
+      ).then((data) => {
+        pages.value = data.default.value
+      })
+    }
+    watch(page, reloadPages)
+    reloadPages()
     const router = useRouter()
     const goPrevLink = () => {
       if (prevLink.value !== undefined) {
@@ -75,6 +72,15 @@ export default defineComponent({
       if (nextLink.value !== undefined) {
         router.push(nextLink.value)
       }
+    }
+    if (import.meta.hot) {
+      import.meta.hot?.on('plugin-blog:blogData', ({ updates }) => {
+        const value = updates[id.value] && updates[id.value][key.value]
+        if (value !== undefined && value <= page.value) {
+          console.log('about to reload', value)
+          reloadPages()
+        }
+      })
     }
     return {
       pages,

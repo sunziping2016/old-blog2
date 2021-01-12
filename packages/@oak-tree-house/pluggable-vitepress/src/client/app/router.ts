@@ -71,7 +71,7 @@ addBlogRoute(blogData)
 addContentRoute()
 
 if (import.meta.hot) {
-  import.meta.hot?.on('plugin-blog:blogData', () => {
-    // TODO
+  import.meta.hot?.on('plugin-blog:blogData', (data) => {
+    console.log('blogData', data.blogData)
   })
 }

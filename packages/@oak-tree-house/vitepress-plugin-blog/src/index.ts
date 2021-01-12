@@ -40,14 +40,25 @@ export interface BlogPluginOptions {
 export type BlogPlugin = VitepressPlugin<BlogPluginOptions>
 
 export function defaultSorter(prev: MarkdownFile, next: MarkdownFile): number {
+  if (
+    prev.frontmatter.date === undefined &&
+    next.frontmatter.date == undefined
+  ) {
+    return prev.relativePath > next.relativePath
+      ? -1
+      : prev.relativePath < next.relativePath
+      ? 1
+      : 0
+  }
   const prevTime = dayjs(prev.frontmatter.date)
   const nextTime = dayjs(next.frontmatter.date)
-  return prevTime.diff(nextTime) > 0 ? -1 : 1
+  const diff = prevTime.diff(nextTime)
+  return diff > 0 ? -1 : diff < 0 ? 1 : 0
 }
 
 export class Pagination {
-  private sorter: Sorter
-  private lengthPerPage: number
+  private readonly sorter: Sorter
+  private readonly lengthPerPage: number
 
   constructor(options: PaginationOptions) {
     this.sorter = options.sorter || defaultSorter
@@ -56,12 +67,21 @@ export class Pagination {
   getLengthPerPage(): number {
     return this.lengthPerPage
   }
+  equal(left: MarkdownFile, right: MarkdownFile): boolean {
+    return this.sorter(left, right) === 0
+  }
   paginatePages(pages: MarkdownFile[], page: number): MarkdownFile[] {
     pages = pages.slice()
     pages = pages.sort(this.sorter)
     return pages.slice(
       page * this.lengthPerPage,
       (page + 1) * this.lengthPerPage
+    )
+  }
+  indexOfPage(pages: MarkdownFile[], page: MarkdownFile): number {
+    return Math.floor(
+      pages.filter((other) => this.sorter(other, page) < 0).length /
+        this.lengthPerPage
     )
   }
 }
@@ -78,15 +98,17 @@ export interface BlogDataItem {
 export type BlogData = Record<string, BlogDataItem>
 
 export class Classifier {
-  private path: string
-  private title: string
+  private readonly id: string
+  private readonly path: string
+  private readonly title: string
   private pagination: Pagination
-  private dirname?: string
-  private keys?: string[]
-  private pages: Record<string, [MarkdownFile, Set<string>]>
-  private keyToPages: Record<string, Set<string>>
+  private readonly dirname?: string
+  private readonly keys?: string[]
+  private readonly pages: Record<string, [MarkdownFile, Set<string>]>
+  private readonly keyToPages: Record<string, Set<string>>
 
   public constructor(options: ClassifierOptions) {
+    this.id = options.id
     this.path = options.path || `/${options.id}/`
     this.title = options.title || options.id
     this.pagination = new Pagination(options.pagination || {})
@@ -145,7 +167,34 @@ export class Classifier {
     })
     return new Set(values)
   }
-  updateFile(file: MarkdownFile): boolean {
+  generateUpdates(files: MarkdownFile[]): Record<string, number> {
+    if (this.keys === undefined) {
+      return {
+        all: Math.min(
+          ...files.map((file) =>
+            this.pagination.indexOfPage(
+              Object.values(this.pages).map((x) => x[0]),
+              file
+            )
+          )
+        )
+      }
+    } else {
+      const result: Record<string, number> = {}
+      for (const key of Object.keys(this.keyToPages)) {
+        result[key] = Math.min(
+          ...files.map((file) =>
+            this.pagination.indexOfPage(
+              [...this.keyToPages[key]].map((path) => this.pages[path][0]),
+              file
+            )
+          )
+        )
+      }
+      return result
+    }
+  }
+  updateFile(file: MarkdownFile): false | Record<string, number> {
     if (!this.filterFile(file)) {
       return false
     }
@@ -156,7 +205,8 @@ export class Classifier {
     if (
       oldFile !== undefined &&
       oldFile[1].size === newFileKeys.size &&
-      [...newFileKeys].every((key) => oldFile[1].has(key))
+      [...newFileKeys].every((key) => oldFile[1].has(key)) &&
+      this.pagination.equal(oldFile[0], file)
     ) {
       oldFile[0] = file
       return false
@@ -171,14 +221,17 @@ export class Classifier {
       }
       delete this.pages[file.relativePath]
     }
+    const updates = this.generateUpdates(
+      oldFile === undefined ? [file] : [oldFile[0], file]
+    )
     for (const key of newFileKeys) {
       this.keyToPages[key] = this.keyToPages[key] || new Set<string>()
       this.keyToPages[key].add(file.relativePath)
     }
     this.pages[file.relativePath] = [file, newFileKeys]
-    return true
+    return updates
   }
-  removeFile(relativePath: string): boolean {
+  removeFile(relativePath: string): false | Record<string, number> {
     const oldFile = this.pages[relativePath]
     if (oldFile === undefined) {
       return false
@@ -190,7 +243,7 @@ export class Classifier {
       }
     }
     delete this.pages[relativePath]
-    return true
+    return this.generateUpdates([oldFile[0]])
   }
   fetchPages(key: string, page: number): MarkdownFile[] {
     let candidates: MarkdownFile[]
@@ -228,6 +281,7 @@ export class Classifier {
       '      }\n' +
       '    })\n' +
       '  })\n' +
+      '  import.meta.hot.accept(() => {})\n' +
       '}\n'
     return result
   }
@@ -269,11 +323,13 @@ const plugin: BlogPlugin = async (options, context) => {
       lastUpdated: Math.round((await fs.stat(full_path)).mtimeMs)
     }
   }
+  let lastBlogData: BlogData | undefined
   function getBlogData(): BlogData {
     const data: BlogData = {}
     for (const [key, value] of Object.entries(classifiers)) {
       data[key] = value.exportData()
     }
+    lastBlogData = data
     return data
   }
   const markdownFiles = await globby(['**.md'], {
@@ -298,35 +354,63 @@ const plugin: BlogPlugin = async (options, context) => {
       }
     },
     async configureServer(server) {
-      const updatedClassifier: Set<string> = new Set<string>()
+      let updatedClassifier: Record<string, Record<string, number>> = {}
       const handleHotUpdate = debounce((): void => {
-        if (updatedClassifier.size !== 0) {
+        if (Object.keys(updatedClassifier).length !== 0) {
+          for (const [id, key_pages] of Object.entries(updatedClassifier)) {
+            for (const [key, page] of Object.entries(key_pages)) {
+              const total =
+                lastBlogData &&
+                lastBlogData[id] &&
+                lastBlogData[id].totalPages[key]
+              if (total !== undefined) {
+                for (let i = page; i < total; ++i) {
+                  console.log('invalidate', id, key, i)
+                  const module = server.moduleGraph.getModuleById(
+                    `/@blogData/${id}/${key}/${i}`
+                  )
+                  if (module !== undefined) {
+                    module.transformResult = null
+                  }
+                }
+              }
+            }
+          }
           server.ws.send({
             type: 'custom',
             event: 'plugin-blog:blogData',
             data: {
-              updatedClassifier: [...updatedClassifier],
+              updates: updatedClassifier,
               blogData: getBlogData()
             }
           })
-          updatedClassifier.clear()
+          updatedClassifier = {}
         }
       }, 200)
+      function mergeUpdates(
+        id: string,
+        updates: false | Record<string, number>
+      ) {
+        if (updates) {
+          const item = updatedClassifier[id] || {}
+          for (const [key, value] of Object.entries(updates)) {
+            if (item[key] === undefined || item[key] > value) {
+              item[key] = value
+            }
+          }
+          updatedClassifier[id] = item
+          handleHotUpdate()
+        }
+      }
       async function updateFile(file: string): Promise<void> {
         const markdownFile = await loadMarkdownFile(file)
         for (const [id, classifier] of Object.entries(classifiers)) {
-          if (classifier.updateFile(markdownFile)) {
-            updatedClassifier.add(id)
-            handleHotUpdate()
-          }
+          mergeUpdates(id, classifier.updateFile(markdownFile))
         }
       }
       function removeFile(file: string) {
         for (const [id, classifier] of Object.entries(classifiers)) {
-          if (classifier.removeFile(file)) {
-            updatedClassifier.add(id)
-            handleHotUpdate()
-          }
+          mergeUpdates(id, classifier.removeFile(file))
         }
       }
       server.watcher.on('change', (file) => {
@@ -352,6 +436,7 @@ const plugin: BlogPlugin = async (options, context) => {
     load(id) {
       const m = id.match(BLOG_PATH_RE)
       if (m) {
+        console.log('load', id)
         if (m[1] === undefined) {
           return `export default ${JSON.stringify(getBlogData())}`
         } else if (classifiers[m[1]] !== undefined && m[2] !== undefined) {
