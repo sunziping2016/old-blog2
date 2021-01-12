@@ -218,16 +218,16 @@ export class Classifier {
     ).join('')}])\n\n`
     result += 'export default data\n\n'
     result +=
-      'if (import.meta.hot.accept) {\n' +
-      `${pages
-        .map((page, index) => {
-          return (
-            `  import.meta.hot.accept("/${page.relativePath}?pageData", (dep) => {\n` +
-            `    data.value[${index}].pageData = dep.default\n` +
-            '  })\n'
-          )
-        })
-        .join('')}` +
+      'if (import.meta.hot) {\n' +
+      '  import.meta.hot.accept([\n' +
+      pages.map((page) => `    "/${page.relativePath}?pageData",\n`).join('') +
+      '  ], (deps) => {\n' +
+      '    deps.forEach((dep, index) => {\n' +
+      '      if (dep !== undefined) {\n' +
+      '        data.value[index].pageData = dep.default\n' +
+      '      }\n' +
+      '    })\n' +
+      '  })\n' +
       '}\n'
     return result
   }
