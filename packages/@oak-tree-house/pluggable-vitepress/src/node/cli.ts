@@ -1,41 +1,18 @@
 import path from 'path'
-import { createServer, ViteDevServer } from 'vite'
-import createVuePlugin from '@vitejs/plugin-vue'
+import { createServer } from 'vite'
 import MarkdownIt from 'markdown-it'
-import qs from 'querystring'
 import minimist from 'minimist'
 import { resolvePath, resolveUserConfig } from './config'
-import { SiteData } from '../shared/config'
 import { PluginApi, VitepressPluginContext } from './plugin'
-import { createMarkdownRender, MarkdownCachedLoader } from './markdown'
+import { createMarkdownRender } from './markdown'
+import createVuePlugin from './vitePlugins/vueWrapper'
+import createMarkdownPlugin from './vitePlugins/markdown'
+import createSiteDataPlugin from './vitePlugins/siteData'
+import createVitepressPugin from './vitePlugins/vitepress'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
 export const root = argv.root || path.join(__dirname, './docs.fallback')
-export const APP_PATH = path.join(__dirname, '../client/app')
-export const DEFAULT_THEME_PATH = path.join(
-  __dirname,
-  '../client/theme-default'
-)
-
-export const HTML_TEMPLATE = `\
-<!DOCTYPE html>
-<html lang="">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title></title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/@fs/${APP_PATH}/index.js"></script>
-  </body>
-</html>
-`
-
-export const SITE_DATA_ID = '@siteData'
-export const SITE_DATA_REQUEST_PATH = '/' + SITE_DATA_ID
 
 async function main(): Promise<void> {
   // Load config
@@ -58,144 +35,18 @@ async function main(): Promise<void> {
     })
   )
   const renderer = createMarkdownRender(md)
-  const mdLoader = new MarkdownCachedLoader(renderer)
 
-  const siteData: SiteData = {
-    title: userConfig.title || 'VitePress',
-    description: userConfig.description || 'A VitePress site',
-    base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/'
-  }
-
-  const vuePlugin = createVuePlugin({
-    include: [/\.vue$/, /\.md$/],
-    ssr: false
-  })
-  const transformId = (
-    id: string
-  ): {
-    filename: string
-    newId: string
-    pageData?: boolean
-    content?: boolean
-    excerpt?: boolean
-  } => {
-    const [filename, rawQuery] = id.split(`?`, 2)
-    const query = qs.parse(rawQuery || '')
-    if (filename.endsWith('.md')) {
-      if (query.pageData !== undefined) {
-        return { filename, newId: id, pageData: true }
-      } else if (query.excerpt !== undefined) {
-        const newFilename = filename.slice(0, -3) + '.excerpt.md'
-        return {
-          filename: newFilename,
-          newId: newFilename + '?' + rawQuery,
-          excerpt: true
-        }
-      } else if (query.content !== undefined) {
-        const newFilename = filename.slice(0, -3) + '.content.md'
-        return {
-          filename: newFilename,
-          newId: newFilename + '?' + rawQuery,
-          content: true
-        }
-      }
-    }
-    return { filename, newId: id }
-  }
-  const originVuePluginLoad = vuePlugin.load
-  if (originVuePluginLoad !== undefined) {
-    vuePlugin.load = async function (id) {
-      const { newId, pageData } = transformId(id)
-      if (!pageData) {
-        return await originVuePluginLoad.call(this, newId)
-      }
-    }
-  }
-  const originVuePluginTransform = vuePlugin.transform
-  if (originVuePluginTransform !== undefined) {
-    vuePlugin.transform = async function (code, id) {
-      const { newId, pageData } = transformId(id)
-      if (!pageData) {
-        return await originVuePluginTransform.call(this, code, newId)
-      }
-    }
-  }
-  const originVueHandleHotUpdate = vuePlugin.handleHotUpdate
-  if (originVueHandleHotUpdate !== undefined) {
-    vuePlugin.handleHotUpdate = async function (ctx) {
-      return ctx.modules
-    }
-  }
-
-  // Load data
   const server = await createServer({
     root: root,
     plugins: [
       ...pluginApi.getVitePlugins(),
-      {
-        name: 'oak-press',
-        config() {
-          return {
-            alias: [
-              {
-                find: '/@theme',
-                replacement: DEFAULT_THEME_PATH
-              },
-              {
-                find: SITE_DATA_ID,
-                replacement: SITE_DATA_REQUEST_PATH
-              },
-              {
-                find: /^vue$/,
-                replacement: require.resolve(
-                  '@vue/runtime-dom/dist/runtime-dom.esm-bundler.js'
-                )
-              }
-            ]
-          }
-        },
-        resolveId(id) {
-          if (id === SITE_DATA_REQUEST_PATH) {
-            return SITE_DATA_REQUEST_PATH
-          }
-        },
-        load(id) {
-          if (id === SITE_DATA_REQUEST_PATH) {
-            return `export default ${JSON.stringify(siteData)}`
-          }
-        },
-        async transform(code, id) {
-          const [filename, rawQuery] = id.split(`?`, 2)
-          const query = qs.parse(rawQuery || '')
-          if (filename.endsWith('.md')) {
-            if (query.pageData !== undefined) {
-              return await mdLoader.exportPageData(filename, code, root)
-            } else if (query.excerpt !== undefined) {
-              return await mdLoader.exportExcerpt(filename, code, root)
-            } else {
-              return await mdLoader.exportContent(filename, code, root)
-            }
-          }
-        },
-        configureServer(server: ViteDevServer) {
-          return () => {
-            server.app.use((req, res, next) => {
-              if (req.url && req.url.endsWith('.html')) {
-                res.statusCode = 200
-                res.end(HTML_TEMPLATE)
-                return
-              }
-              next()
-            })
-          }
-        },
-        async handleHotUpdate(ctx) {
-          if (ctx.file.endsWith('.md')) {
-            mdLoader.invalidateFile(ctx.file)
-          }
-        }
-      },
-      vuePlugin
+      createVitepressPugin(),
+      createSiteDataPlugin(userConfig),
+      createMarkdownPlugin(renderer, root),
+      createVuePlugin({
+        include: [/\.vue$/, /\.md$/],
+        ssr: false
+      })
     ]
   })
   await server.listen()
