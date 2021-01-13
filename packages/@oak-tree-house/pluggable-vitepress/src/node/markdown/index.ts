@@ -47,55 +47,91 @@ export function inferTitle(frontmatter: any, content: string): string {
   return ''
 }
 
-export interface TransformMarkdownOptions {
-  excerpt: boolean
+export interface MarkdownItem {
+  pageData: PageData
+  excerptHtml: string
+  contentHtml: string
+  hoistedTags: string[]
 }
 
-export async function exportMarkdownPageData(
-  renderer: MarkdownRenderer,
-  root: string,
-  src: string,
-  file: string
-): Promise<string> {
-  const relativePath = slash(path.relative(root, file))
-  const { content, data: frontmatter } = matter(src, {
-    excerpt_separator: '<!-- more -->'
-  })
-  const pageData: PageData = {
-    title: inferTitle(frontmatter, content),
-    frontmatter,
-    relativePath,
-    lastUpdated: Math.round((await fs.stat(file)).mtimeMs)
+export class MarkdownCachedLoader {
+  private readonly renderer: MarkdownRenderer
+  private readonly markdownItems: Record<string, MarkdownItem>
+
+  constructor(renderer: MarkdownRenderer) {
+    this.renderer = renderer
+    this.markdownItems = {}
   }
-  return (
-    `const pageData = ${JSON.stringify(pageData)}\n\n` +
-    'export default pageData\n'
-  )
-}
 
-export function exportMarkdownExcerpt(
-  renderer: MarkdownRenderer,
-  root: string,
-  src: string
-): string {
-  const { excerpt } = matter(src, {
-    excerpt_separator: '<!-- more -->'
-  })
-  const { html: excerptHtml } = excerpt ? renderer(excerpt) : { html: '' }
-  return `<template><div>${excerptHtml}</div></template>\n`
-}
+  invalidateFile(filename: string): boolean {
+    return delete this.markdownItems[filename]
+  }
 
-export function exportMarkdown(
-  renderer: MarkdownRenderer,
-  root: string,
-  src: string
-): string {
-  const { content } = matter(src, {
-    excerpt_separator: '<!-- more -->'
-  })
-  const { html: contentHtml, data } = renderer(content)
-  return (
-    `<template><div>${contentHtml}</div></template>\n` +
-    (data.hoistedTags || []).join('\n')
-  )
+  async ensureMarkdownItem(
+    filename: string,
+    code: string,
+    root: string
+  ): Promise<MarkdownItem> {
+    if (this.markdownItems[filename] !== undefined) {
+      return this.markdownItems[filename]
+    }
+    const relativePath = slash(path.relative(root, filename))
+    const { content, data: frontmatter, excerpt } = matter(code, {
+      excerpt_separator: '<!-- more -->'
+    })
+    const { html: excerptHtml } = excerpt
+      ? this.renderer(excerpt)
+      : { html: '' }
+    const {
+      html: contentHtml,
+      data: { hoistedTags }
+    } = this.renderer(content)
+    const pageData: PageData = {
+      title: inferTitle(frontmatter, content),
+      frontmatter,
+      relativePath,
+      lastUpdated: Math.round((await fs.stat(filename)).mtimeMs)
+    }
+    const item: MarkdownItem = {
+      pageData,
+      excerptHtml,
+      contentHtml,
+      hoistedTags: hoistedTags || []
+    }
+    this.markdownItems[filename] = item
+    return item
+  }
+
+  async exportPageData(
+    filename: string,
+    code: string,
+    root: string
+  ): Promise<string> {
+    const item = await this.ensureMarkdownItem(filename, code, root)
+    return (
+      `const pageData = ${JSON.stringify(item.pageData)}\n\n` +
+      'export default pageData\n'
+    )
+  }
+
+  async exportExcerpt(
+    filename: string,
+    code: string,
+    root: string
+  ): Promise<string> {
+    const item = await this.ensureMarkdownItem(filename, code, root)
+    return `<template><div>${item.excerptHtml}</div></template>\n`
+  }
+
+  async exportContent(
+    filename: string,
+    code: string,
+    root: string
+  ): Promise<string> {
+    const item = await this.ensureMarkdownItem(filename, code, root)
+    return (
+      `<template><div>${item.contentHtml}</div></template>\n` +
+      (item.hoistedTags || []).join('\n')
+    )
+  }
 }

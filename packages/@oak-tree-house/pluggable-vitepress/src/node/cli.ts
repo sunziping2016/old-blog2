@@ -7,12 +7,7 @@ import minimist from 'minimist'
 import { resolvePath, resolveUserConfig } from './config'
 import { SiteData } from '../shared/config'
 import { PluginApi, VitepressPluginContext } from './plugin'
-import {
-  createMarkdownRender,
-  exportMarkdown,
-  exportMarkdownExcerpt,
-  exportMarkdownPageData
-} from './markdown'
+import { createMarkdownRender, MarkdownCachedLoader } from './markdown'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
@@ -63,6 +58,7 @@ async function main(): Promise<void> {
     })
   )
   const renderer = createMarkdownRender(md)
+  const mdLoader = new MarkdownCachedLoader(renderer)
 
   const siteData: SiteData = {
     title: userConfig.title || 'VitePress',
@@ -149,16 +145,11 @@ async function main(): Promise<void> {
           const query = qs.parse(rawQuery || '')
           if (filename.endsWith('.md')) {
             if (query.pageData !== undefined) {
-              return await exportMarkdownPageData(
-                renderer,
-                root,
-                code,
-                filename
-              )
+              return await mdLoader.exportPageData(filename, code, root)
             } else if (query.excerpt !== undefined) {
-              return exportMarkdownExcerpt(renderer, root, code)
+              return await mdLoader.exportExcerpt(filename, code, root)
             } else {
-              return exportMarkdown(renderer, root, code)
+              return await mdLoader.exportContent(filename, code, root)
             }
           }
         },
@@ -175,10 +166,9 @@ async function main(): Promise<void> {
           }
         },
         async handleHotUpdate(ctx) {
-          console.log(
-            ctx.file,
-            ctx.modules.map((x) => x.id)
-          )
+          if (ctx.file.endsWith('.md')) {
+            mdLoader.invalidateFile(ctx.file)
+          }
         }
       },
       vuePlugin
