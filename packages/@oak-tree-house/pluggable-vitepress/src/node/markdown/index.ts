@@ -109,8 +109,17 @@ export class MarkdownCachedLoader {
   ): Promise<string> {
     const item = await this.ensureMarkdownItem(filename, code, root)
     return (
-      `const pageData = ${JSON.stringify(item.pageData)}\n\n` +
-      'export default pageData\n'
+      'import { shallowRef } from "vue"\n' +
+      `const pageData = shallowRef(${JSON.stringify(item.pageData)})\n\n` +
+      'export default pageData\n\n' +
+      'if (import.meta.hot) {\n' +
+      '  if (import.meta.hot.data.pageData) {\n' +
+      '    import.meta.hot.data.pageData.value = pageData.value\n' +
+      '  } else {\n' +
+      '    import.meta.hot.data.pageData = pageData\n' +
+      '  }\n' +
+      '  import.meta.hot.accept(() => {})\n' +
+      '}\n'
     )
   }
 

@@ -256,7 +256,7 @@ export class Classifier {
   }
   generateFetchPagesCode(key: string, page: number): string {
     const pages = this.fetchPages(key, page)
-    let result = 'import { markRaw, ref } from "vue"\n'
+    let result = 'import { markRaw } from "vue"\n'
     for (let i = 0; i < pages.length; ++i) {
       const page = pages[i]
       result += `import pageData${i} from "/${page.relativePath}?pageData"\n`
@@ -265,24 +265,11 @@ export class Classifier {
       const page = pages[i]
       result += `import excerpt${i} from "/${page.relativePath}?excerpt"\n`
     }
-    result += `\nconst data = ref([\n${Array.from(
+    result += `\nconst data = [\n${Array.from(
       { length: pages.length },
       (x, i) => `  { excerpt: markRaw(excerpt${i}), pageData: pageData${i} },\n`
-    ).join('')}])\n\n`
+    ).join('')}]\n\n`
     result += 'export default data\n\n'
-    result +=
-      'if (import.meta.hot) {\n' +
-      '  import.meta.hot.accept([\n' +
-      pages.map((page) => `    "/${page.relativePath}?pageData",\n`).join('') +
-      '  ], (deps) => {\n' +
-      '    deps.forEach((dep, index) => {\n' +
-      '      if (dep !== undefined) {\n' +
-      '        data.value[index].pageData = dep.default\n' +
-      '      }\n' +
-      '    })\n' +
-      '  })\n' +
-      '  import.meta.hot.accept(() => {})\n' +
-      '}\n'
     return result
   }
 }
@@ -365,7 +352,6 @@ const plugin: BlogPlugin = async (options, context) => {
                 lastBlogData[id].totalPages[key]
               if (total !== undefined) {
                 for (let i = page; i < total; ++i) {
-                  console.log('invalidate', id, key, i)
                   const module = server.moduleGraph.getModuleById(
                     `/@blogData/${id}/${key}/${i}`
                   )
@@ -436,9 +422,8 @@ const plugin: BlogPlugin = async (options, context) => {
     load(id) {
       const m = id.match(BLOG_PATH_RE)
       if (m) {
-        console.log('load', id)
         if (m[1] === undefined) {
-          return `export default ${JSON.stringify(getBlogData())}`
+          return `export default ${JSON.stringify(getBlogData())}\n`
         } else if (classifiers[m[1]] !== undefined && m[2] !== undefined) {
           const classifier = classifiers[m[1]]
           const key = m[2]

@@ -52,12 +52,11 @@ export default defineComponent({
         : undefined
     )
     const reloadPages = () => {
-      console.log('reloading', id.value, key.value, page.value)
       return import(
         /* @vite-ignore */ `/@blogData/${id.value}/${key.value}/${page.value}?` +
           `t=${Date.now()}`
       ).then((data) => {
-        pages.value = data.default.value
+        pages.value = data.default
       })
     }
     watch(page, reloadPages)
@@ -77,7 +76,6 @@ export default defineComponent({
       import.meta.hot?.on('plugin-blog:blogData', ({ updates }) => {
         const value = updates[id.value] && updates[id.value][key.value]
         if (value !== undefined && value <= page.value) {
-          console.log('about to reload', value)
           reloadPages()
         }
       })
