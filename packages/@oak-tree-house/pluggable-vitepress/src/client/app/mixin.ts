@@ -6,7 +6,7 @@ function pathToFile(path: string): string {
   if (path.endsWith('/')) {
     path += `index`
   }
-  path += `.md?t=${Date.now()}`
+  path += `.md?t=${Date.now()}&content`
   return path
 }
 

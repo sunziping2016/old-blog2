@@ -70,36 +70,60 @@ async function main(): Promise<void> {
     include: [/\.vue$/, /\.md$/],
     ssr: false
   })
+  const transformId = (
+    id: string
+  ): {
+    filename: string
+    newId: string
+    pageData?: boolean
+    content?: boolean
+    excerpt?: boolean
+  } => {
+    const [filename, rawQuery] = id.split(`?`, 2)
+    const query = qs.parse(rawQuery || '')
+    if (filename.endsWith('.md')) {
+      if (query.pageData !== undefined) {
+        return { filename, newId: id, pageData: true }
+      } else if (query.excerpt !== undefined) {
+        const newFilename = filename.slice(0, -3) + '.excerpt.md'
+        return {
+          filename: newFilename,
+          newId: newFilename + '?' + rawQuery,
+          excerpt: true
+        }
+      } else if (query.content !== undefined) {
+        const newFilename = filename.slice(0, -3) + '.content.md'
+        return {
+          filename: newFilename,
+          newId: newFilename + '?' + rawQuery,
+          content: true
+        }
+      }
+    }
+    return { filename, newId: id }
+  }
+  const originVuePluginLoad = vuePlugin.load
+  if (originVuePluginLoad !== undefined) {
+    vuePlugin.load = async function (id) {
+      const { newId, pageData } = transformId(id)
+      if (!pageData) {
+        return await originVuePluginLoad.call(this, newId)
+      }
+    }
+  }
   const originVuePluginTransform = vuePlugin.transform
   if (originVuePluginTransform !== undefined) {
     vuePlugin.transform = async function (code, id) {
-      const [filename, rawQuery] = id.split(`?`, 2)
-      const query = qs.parse(rawQuery || '')
-      if (!filename.endsWith('.md') || query.pageData === undefined) {
-        return await originVuePluginTransform.call(this, code, id)
+      const { newId, pageData } = transformId(id)
+      if (!pageData) {
+        return await originVuePluginTransform.call(this, code, newId)
       }
     }
   }
   const originVueHandleHotUpdate = vuePlugin.handleHotUpdate
   if (originVueHandleHotUpdate !== undefined) {
     vuePlugin.handleHotUpdate = async function (ctx) {
-      const extra_module = ctx.modules.find((module) => {
-        if (module.id === null) {
-          return false
-        }
-        const [filename, rawQuery] = module.id.split(`?`, 2)
-        const query = qs.parse(rawQuery || '')
-        return filename.endsWith('.md') && query.pageData !== undefined
-      })
-      if (extra_module !== undefined) {
-        ctx.modules.splice(ctx.modules.indexOf(extra_module), 1)
-      }
-      const modules =
-        (await originVueHandleHotUpdate.call(this, ctx)) || ctx.modules.slice()
-      if (extra_module !== undefined) {
-        modules.push(extra_module)
-      }
-      return modules
+      return ctx.modules
     }
   }
 
