@@ -47,7 +47,7 @@ export default defineComponent({
         : undefined
     )
     const nextLink = computed<string | undefined>(() =>
-      page.value + 1 < classifier.totalPages[key.value]
+      page.value + 1 < classifier.values[key.value].totalPages
         ? `${basePath}page/${page.value + 1}/`
         : undefined
     )

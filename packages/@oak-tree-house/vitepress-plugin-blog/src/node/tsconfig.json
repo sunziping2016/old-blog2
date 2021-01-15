@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "../dist",
+    "outDir": "../../dist/node",
     "module": "commonjs",
     "moduleResolution": "node",
     "strict": true,
@@ -10,5 +10,9 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "downlevelIteration": true
-  }
+  },
+  "include": [
+    ".",
+    "../shared"
+  ]
 }

@@ -8,6 +8,7 @@ import path from 'path'
 import fs from 'fs-extra'
 import matter from 'gray-matter'
 import slash from 'slash'
+import { BlogData, BlogDataItem } from '../shared/types'
 
 export interface MarkdownFile {
   relativePath: string
@@ -86,17 +87,6 @@ export class Pagination {
   }
 }
 
-export interface BlogDataItem {
-  path: string
-  title: string
-  dirname?: string
-  keys?: string[]
-  lengthPerPage: number
-  totalPages: Record<string, number>
-}
-
-export type BlogData = Record<string, BlogDataItem>
-
 export class Classifier {
   private readonly id: string
   private readonly path: string
@@ -126,7 +116,7 @@ export class Classifier {
       path: this.path,
       title: this.title,
       lengthPerPage,
-      totalPages: {}
+      values: {}
     }
     if (this.dirname !== undefined) {
       result.dirname = this.dirname
@@ -134,12 +124,17 @@ export class Classifier {
     if (this.keys !== undefined) {
       result.keys = this.keys
       for (const [key, pages] of Object.entries(this.keyToPages)) {
-        result.totalPages[key] = Math.ceil(pages.size / lengthPerPage)
+        result.values[key] = {
+          totalItems: pages.size,
+          totalPages: Math.ceil(pages.size / lengthPerPage)
+        }
       }
     } else {
-      result.totalPages.all = Math.ceil(
-        Object.keys(this.pages).length / lengthPerPage
-      )
+      const totalItems = Object.keys(this.pages).length
+      result.values.all = {
+        totalItems,
+        totalPages: Math.ceil(totalItems / lengthPerPage)
+      }
     }
     return result
   }
@@ -265,10 +260,13 @@ export class Classifier {
       const page = pages[i]
       result += `import excerpt${i} from "/${page.relativePath}?excerpt"\n`
     }
-    result += `\nconst data = [\n${Array.from(
-      { length: pages.length },
-      (x, i) => `  { excerpt: markRaw(excerpt${i}), pageData: pageData${i} },\n`
-    ).join('')}]\n\n`
+    result +=
+      '\n' +
+      `const data = [\n${Array.from(
+        { length: pages.length },
+        (x, i) =>
+          `  { excerpt: markRaw(excerpt${i}), pageData: pageData${i} },\n`
+      ).join('')}]\n\n`
     result += 'export default data\n\n'
     return result
   }
@@ -349,7 +347,7 @@ const plugin: BlogPlugin = async (options, context) => {
               const total =
                 lastBlogData &&
                 lastBlogData[id] &&
-                lastBlogData[id].totalPages[key]
+                lastBlogData[id].values[key].totalPages
               if (total !== undefined) {
                 for (let i = page; i < total; ++i) {
                   const module = server.moduleGraph.getModuleById(

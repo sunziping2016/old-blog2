@@ -6,6 +6,7 @@ import path from 'path'
 export interface VitepressPluginOption extends VitePlugin {
   configMarkdown?: (config: MarkdownIt.Options) => MarkdownIt.Options
   extendMarkdown?: (md: MarkdownIt) => MarkdownIt
+  enhanceAppFile?: string
 }
 
 export interface VitepressPluginContext {
@@ -31,7 +32,7 @@ export type VitepressPlugin<Options> =
   | RawVitepressPlugin
 
 export class PluginApi {
-  private plugins: VitepressPluginOption[]
+  private readonly plugins: VitepressPluginOption[]
 
   constructor(plugins: VitepressPluginOption[]) {
     this.plugins = plugins
@@ -78,5 +79,15 @@ export class PluginApi {
       }
     }
     return config
+  }
+
+  collectEnhanceAppFiles(): string[] {
+    const results: string[] = []
+    for (const plugin of this.plugins) {
+      if (plugin.enhanceAppFile !== undefined) {
+        results.push(plugin.enhanceAppFile)
+      }
+    }
+    return results
   }
 }

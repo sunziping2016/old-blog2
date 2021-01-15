@@ -8,7 +8,7 @@ import { createMarkdownRender } from './markdown'
 import createVuePlugin from './vitePlugins/vueWrapper'
 import createMarkdownPlugin from './vitePlugins/markdown'
 import createSiteDataPlugin from './vitePlugins/siteData'
-import createVitepressPugin from './vitePlugins/vitepress'
+import createVitepressPlugin from './vitePlugins/vitepress'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
     root: root,
     plugins: [
       ...pluginApi.getVitePlugins(),
-      createVitepressPugin(),
+      createVitepressPlugin(),
       createSiteDataPlugin(userConfig),
       createMarkdownPlugin(renderer, root),
       createVuePlugin({

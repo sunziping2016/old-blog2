@@ -1,12 +1,12 @@
 {
   "name": "@oak-tree-house/vitepress-plugin-blog",
   "version": "0.1.0",
-  "main": "dist/index.js",
+  "main": "dist/node/index.js",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p src"
+    "build": "rimraf -rf dist && tsc -p src/client && tsc -p src/node && node scripts/copyFiles.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
     "slash": "^3.0.0"
   },
   "devDependencies": {
+    "rimraf": "^3.0.2",
     "typescript": "^4.1.3"
   }
 }

@@ -24,7 +24,7 @@ export const HTML_TEMPLATE = `\
 </html>
 `
 
-export default function createVitepressPugin(): Plugin {
+export default function createVitepressPlugin(): Plugin {
   return {
     name: 'vitepress',
     config() {

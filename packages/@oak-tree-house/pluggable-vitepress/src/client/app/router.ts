@@ -12,7 +12,13 @@ export interface BlogDataItem {
   dirname?: string
   keys?: string[]
   lengthPerPage: number
-  totalPages: Record<string, number>
+  values: Record<
+    string,
+    {
+      totalItems: number
+      totalPages: number
+    }
+  >
 }
 
 export type BlogData = Record<string, BlogDataItem>
@@ -49,7 +55,7 @@ function addBlogRoute(blogData: BlogData) {
             key: 'all'
           }
         })
-        if (data.totalPages.all > 1) {
+        if (data.values.all.totalPages > 1) {
           router.addRoute({
             name: `${id}-rest`,
             path: data.path + 'page/:page/',
