@@ -12,7 +12,11 @@
     "types": [
       "vite/client",
       "node"
-    ]
+    ],
+    "paths": {
+      "@types": ["../shared/types.d.ts"],
+      "@theme/*": ["theme-default/*"]
+    }
   },
   "include": [
     ".",

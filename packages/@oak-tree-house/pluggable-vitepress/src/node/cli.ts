@@ -9,6 +9,7 @@ import createVuePlugin from './vitePlugins/vueWrapper'
 import createMarkdownPlugin from './vitePlugins/markdown'
 import createSiteDataPlugin from './vitePlugins/siteData'
 import createVitepressPlugin from './vitePlugins/vitepress'
+import createEnhanceAppPlugin from './vitePlugins/enhanceApp'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
@@ -43,6 +44,7 @@ async function main(): Promise<void> {
       createVitepressPlugin(),
       createSiteDataPlugin(userConfig),
       createMarkdownPlugin(renderer, root),
+      createEnhanceAppPlugin(pluginApi.collectEnhanceAppFiles()),
       createVuePlugin({
         include: [/\.vue$/, /\.md$/],
         ssr: false

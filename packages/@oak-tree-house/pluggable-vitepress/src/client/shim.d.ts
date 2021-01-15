@@ -5,11 +5,20 @@ declare module '*.vue' {
 }
 
 declare module '@siteData' {
-  const data: never
+  import { SiteData } from '@types'
+  const data: SiteData
   export default data
 }
 
-declare module '@blogData' {
-  const data: never
-  export default data
+declare module '@enhanceApps' {
+  import { App } from 'vue'
+  import { Router } from 'vue-router'
+  import { SiteData } from '@types'
+  function enhanceApps(
+    app: App,
+    router: Router,
+    siteData: SiteData,
+    isServer: boolean
+  ): Promise<void>
+  export default enhanceApps
 }

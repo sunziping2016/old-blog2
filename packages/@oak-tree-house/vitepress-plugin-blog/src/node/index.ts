@@ -328,6 +328,7 @@ const plugin: BlogPlugin = async (options, context) => {
   }
   return {
     name: '@oak-tree-house/vitepress-plugin-blog',
+    enhanceAppFile: path.resolve(__dirname, '../client/enhanceApp.js'),
     config() {
       return {
         alias: [

@@ -14,7 +14,8 @@
       "node"
     ],
     "paths": {
-      "/@theme/*": ["theme-default/*"]
+      "@types": ["../shared/types.d.ts"],
+      "@theme/*": ["theme-default/*"]
     }
   },
   "include": [

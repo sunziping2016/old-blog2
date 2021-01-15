@@ -1,4 +1,4 @@
-import { Header, PageData } from '../../shared/config'
+import { Header, PageData } from '../../shared/types'
 import MarkdownIt from 'markdown-it'
 import componentPlugin from './compoent'
 import matter from 'gray-matter'

@@ -1,3 +1,5 @@
+import { ComponentOptions } from 'vue'
+
 export interface SiteData {
   base: string
   title: string
@@ -16,4 +18,9 @@ export interface Header {
   level: number
   title: string
   slug: string
+}
+
+export interface Theme {
+  Layout: ComponentOptions
+  NotFound?: ComponentOptions
 }

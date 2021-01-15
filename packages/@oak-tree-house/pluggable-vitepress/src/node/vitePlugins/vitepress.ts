@@ -31,7 +31,7 @@ export default function createVitepressPlugin(): Plugin {
       return {
         alias: [
           {
-            find: '/@theme',
+            find: '@theme',
             replacement: DEFAULT_THEME_PATH
           },
           {

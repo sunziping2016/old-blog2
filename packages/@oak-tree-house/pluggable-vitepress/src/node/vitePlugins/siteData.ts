@@ -1,6 +1,6 @@
 import { UserConfig } from '../config'
 import { Plugin } from 'vite'
-import { SiteData } from '../../shared/config'
+import { SiteData } from '../../shared/types'
 
 export const SITE_DATA_ID = '@siteData'
 export const SITE_DATA_REQUEST_PATH = '/' + SITE_DATA_ID

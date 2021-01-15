@@ -14,9 +14,9 @@
 <script lang="ts">
 import { ComponentOptions, defineComponent, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { PageData } from '../../shared/config'
+import { PageData } from '@oak-tree-house/pluggable-vitepress/dist/client'
 import blogData from '@blogData'
-import { BlogData } from '../app/router'
+import { BlogData } from '@types'
 
 const blogDataTyped: BlogData = blogData
 

@@ -1,9 +1,10 @@
 import 'vite/dynamic-import-polyfill'
-import { App, createApp, createSSRApp, h } from 'vue'
-import { store, storeKey } from './store'
-import { router } from './router'
+import { App, createApp, createSSRApp, h, readonly } from 'vue'
+import siteData from '@siteData'
+import createRouter from './router'
 import { Content } from './mixin'
-import Theme from '/@theme/index'
+import enhanceApps from '@enhanceApps'
+import Theme from '@theme/index'
 
 function newApp(): App {
   const app = {
@@ -18,7 +19,12 @@ function newApp(): App {
 void import.meta.hot
 
 const app = newApp()
-app.use(store, storeKey)
-app.use(router)
+Object.defineProperty(app.config.globalProperties, '$site', {
+  get: () => readonly(siteData)
+})
 app.component('Content', Content)
-app.mount('#app')
+const router = createRouter(siteData.base)
+enhanceApps(app, router, siteData, import.meta.env.PROD).then(() => {
+  app.use(router)
+  app.mount('#app')
+})
