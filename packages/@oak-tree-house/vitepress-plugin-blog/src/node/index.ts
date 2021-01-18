@@ -32,6 +32,8 @@ export interface ClassifierOptions {
   pagination?: PaginationOptions
   dirname?: string
   keys?: string[] | string
+  indexPostLayout?: string
+  indexKeyLayout?: string
 }
 
 export interface BlogPluginOptions {
@@ -88,6 +90,9 @@ export class Pagination {
 }
 
 export class Classifier {
+  public readonly indexPostLayout?: string
+  public readonly indexKeyLayout?: string
+
   private readonly id: string
   private readonly path: string
   private readonly title: string
@@ -109,6 +114,8 @@ export class Classifier {
     this.keys = typeof options.keys === 'string' ? [options.keys] : options.keys
     this.pages = {}
     this.keyToPages = {}
+    this.indexPostLayout = options.indexPostLayout
+    this.indexKeyLayout = options.indexKeyLayout
   }
   exportData(): BlogDataItem {
     const lengthPerPage = this.pagination.getLengthPerPage()
@@ -273,6 +280,13 @@ export class Classifier {
 }
 
 const BLOG_PATH_RE = /^\/@blogData(?:$|\/([^/]+)\/([^/]+)\/([^/]+))/
+const BLOG_PAGE_RE = /^\/@blog\/([^/]+)\/(post|key)/
+
+const DEFAULT_INDEX_POST_LAYOUT = path.join(
+  __dirname,
+  '../client/IndexPost.vue'
+)
+const DEFAULT_INDEX_KEY_LAYOUT = path.join(__dirname, '../client/IndexKey.vue')
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const debounce = (func: any, wait: number) => {
@@ -413,21 +427,40 @@ const plugin: BlogPlugin = async (options, context) => {
       })
     },
     resolveId(id) {
-      const m = id.match(BLOG_PATH_RE)
-      if (m && (m[1] === undefined || classifiers[m[1]] !== undefined)) {
+      const m1 = id.match(BLOG_PATH_RE)
+      if (m1 && (m1[1] === undefined || classifiers[m1[1]] !== undefined)) {
         return id
+      } else {
+        const m2 = id.match(BLOG_PAGE_RE)
+        if (m2 && classifiers[m2[1]] !== undefined) {
+          return id
+        }
       }
     },
     load(id) {
-      const m = id.match(BLOG_PATH_RE)
-      if (m) {
-        if (m[1] === undefined) {
+      const m1 = id.match(BLOG_PATH_RE)
+      if (m1) {
+        if (m1[1] === undefined) {
           return `export default ${JSON.stringify(getBlogData())}\n`
-        } else if (classifiers[m[1]] !== undefined && m[2] !== undefined) {
-          const classifier = classifiers[m[1]]
-          const key = m[2]
-          const page = parseInt(m[3], 10)
+        } else if (classifiers[m1[1]] !== undefined && m1[2] !== undefined) {
+          const classifier = classifiers[m1[1]]
+          const key = m1[2]
+          const page = parseInt(m1[3], 10)
           return classifier.generateFetchPagesCode(key, page)
+        }
+      } else {
+        const m2 = id.match(BLOG_PAGE_RE)
+        if (m2 && classifiers[m2[1]] !== undefined) {
+          const classifier = classifiers[m2[1]]
+          if (m2[2] === 'post') {
+            return `export { default } from "/@fs/${
+              classifier.indexPostLayout || DEFAULT_INDEX_POST_LAYOUT
+            }"\n`
+          } else if (m2[2] === 'key') {
+            return `export { default } from "/@fs/${
+              classifier.indexKeyLayout || DEFAULT_INDEX_KEY_LAYOUT
+            }"\n`
+          }
         }
       }
     }

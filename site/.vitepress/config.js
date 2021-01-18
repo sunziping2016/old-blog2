@@ -9,6 +9,13 @@ module.exports = {
           dirname: '_posts',
           path: '/',
           lengthPerPage: 10
+        },
+        {
+          id: 'tag',
+          dirname: '_posts',
+          keys: ['tag', 'tags'],
+          path: '/tag/',
+          lengthPerPage: 10
         }
       ],
     }]

@@ -28,3 +28,6 @@ enhanceApps(app, router, siteData, import.meta.env.PROD).then(() => {
   app.use(router)
   app.mount('#app')
 })
+
+// eslint-disable-next-line
+;(window as any).router = router

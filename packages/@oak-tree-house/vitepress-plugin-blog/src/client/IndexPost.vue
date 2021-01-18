@@ -12,54 +12,69 @@
 </template>
 
 <script lang="ts">
-import { ComponentOptions, defineComponent, ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {
+  ComponentOptions,
+  defineComponent,
+  ref,
+  computed,
+  watch,
+  toRefs
+} from 'vue'
+import { useRouter } from 'vue-router'
 import { PageData } from '@oak-tree-house/pluggable-vitepress/dist/client'
-import blogData from '@blogData'
-import { BlogData } from '@types'
-
-const blogDataTyped: BlogData = blogData
+import initialBlogData from '@blogData'
 
 export default defineComponent({
-  setup() {
+  props: {
+    blogId: {
+      type: String,
+      required: true
+    },
+    blogKey: {
+      type: String,
+      required: true
+    },
+    blogPage: {
+      type: Number,
+      default: 0
+    }
+  },
+  setup(props: { blogId: string; blogKey: string; blogPage: number }) {
+    const { blogId, blogKey, blogPage } = toRefs(props)
     const pages = ref<
       Array<{
         excerpt: ComponentOptions
         pageData: PageData
       }>
     >([])
-    const route = useRoute()
-    const id = computed(() => route.meta.id as string)
-    const key = computed(() => route.meta.key as string)
-    const page = computed<number>(() =>
-      parseInt((route.params.page as string) || '0', 10)
+    const blogData = ref(initialBlogData)
+    const classifier = computed(() => blogData.value[blogId.value])
+    const basePath = computed(() =>
+      classifier.value.keys === undefined
+        ? classifier.value.path
+        : `${classifier.value.path}${blogKey.value}/`
     )
-    const classifier = blogDataTyped[id.value]
-    const basePath =
-      classifier.keys === undefined
-        ? classifier.path
-        : `${classifier.path}${key.value}/`
     const prevLink = computed<string | undefined>(() =>
-      page.value === 1
-        ? basePath
-        : page.value > 1
-        ? `${basePath}page/${page.value - 1}/`
+      blogPage.value === 1
+        ? basePath.value
+        : blogPage.value > 1
+        ? `${basePath.value}page/${blogPage.value - 1}/`
         : undefined
     )
     const nextLink = computed<string | undefined>(() =>
-      page.value + 1 < classifier.values[key.value].totalPages
-        ? `${basePath}page/${page.value + 1}/`
+      blogPage.value + 1 < classifier.value.values[blogKey.value].totalPages
+        ? `${basePath.value}page/${blogPage.value + 1}/`
         : undefined
     )
     const reloadPages = () => {
       return import(
-        /* @vite-ignore */ `/@blogData/${id.value}/${key.value}/${page.value}?` +
+        /* @vite-ignore */ `/@blogData/${blogId.value}/${blogKey.value}/${blogPage.value}?` +
           `t=${Date.now()}`
       ).then((data) => {
         pages.value = data.default
       })
     }
-    watch(page, reloadPages)
+    watch([blogId, blogKey, blogPage], reloadPages)
     reloadPages()
     const router = useRouter()
     const goPrevLink = () => {
@@ -73,12 +88,17 @@ export default defineComponent({
       }
     }
     if (import.meta.hot) {
-      import.meta.hot?.on('plugin-blog:blogData', ({ updates }) => {
-        const value = updates[id.value] && updates[id.value][key.value]
-        if (value !== undefined && value <= page.value) {
-          reloadPages()
+      import.meta.hot?.on(
+        'plugin-blog:blogData',
+        ({ updates, blogData: newBlogData }) => {
+          blogData.value = newBlogData
+          const value =
+            updates[blogId.value] && updates[blogId.value][blogKey.value]
+          if (value !== undefined && value <= blogPage.value) {
+            reloadPages()
+          }
         }
-      })
+      )
     }
     return {
       pages,
