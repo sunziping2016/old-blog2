@@ -251,8 +251,10 @@ export class Classifier {
     let candidates: MarkdownFile[]
     if (this.keys === undefined) {
       candidates = Object.values(this.pages).map((x) => x[0])
-    } else {
+    } else if (this.keyToPages[key] !== undefined) {
       candidates = [...this.keyToPages[key]].map((path) => this.pages[path][0])
+    } else {
+      candidates = []
     }
     return this.pagination.paginatePages(candidates, page)
   }
@@ -374,6 +376,10 @@ const plugin: BlogPlugin = async (options, context) => {
                 }
               }
             }
+          }
+          const module = server.moduleGraph.getModuleById('/@blogData')
+          if (module !== undefined) {
+            module.transformResult = null
           }
           server.ws.send({
             type: 'custom',

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="classifier">
     <div>{{ classifier.title }}</div>
     <div>
       <span v-for="(value, key) of classifier.values" :key="key">
@@ -13,7 +13,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, toRefs, ref } from 'vue'
-import initialBlogData from '@blogData'
+import { BlogData } from '@types'
 
 export default defineComponent({
   props: {
@@ -24,8 +24,14 @@ export default defineComponent({
   },
   setup(props: { blogId: string }) {
     const { blogId } = toRefs(props)
-    const blogData = ref(initialBlogData)
-    const classifier = computed(() => blogData.value[blogId.value])
+    const blogData = ref<BlogData>()
+    const classifier = computed(
+      () => blogData.value && blogData.value[blogId.value]
+    )
+    // noinspection TypeScriptCheckImport
+    import(/* @vite-ignore */ `/@blogData?t=${Date.now()}`).then((data) => {
+      blogData.value = data.default
+    })
     if (import.meta.hot) {
       import.meta.hot?.on(
         'plugin-blog:blogData',

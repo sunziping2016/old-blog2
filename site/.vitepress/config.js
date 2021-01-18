@@ -13,6 +13,7 @@ module.exports = {
         {
           id: 'tag',
           dirname: '_posts',
+          title: '标签',
           keys: ['tag', 'tags'],
           path: '/tag/',
           lengthPerPage: 10

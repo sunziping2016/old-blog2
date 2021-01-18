@@ -22,7 +22,7 @@ import {
 } from 'vue'
 import { useRouter } from 'vue-router'
 import { PageData } from '@oak-tree-house/pluggable-vitepress/dist/client'
-import initialBlogData from '@blogData'
+import { BlogData } from '@types'
 
 export default defineComponent({
   props: {
@@ -47,23 +47,41 @@ export default defineComponent({
         pageData: PageData
       }>
     >([])
-    const blogData = ref(initialBlogData)
-    const classifier = computed(() => blogData.value[blogId.value])
-    const basePath = computed(() =>
-      classifier.value.keys === undefined
-        ? classifier.value.path
-        : `${classifier.value.path}${blogKey.value}/`
+    const blogData = ref<BlogData>()
+    // noinspection TypeScriptCheckImport
+    import(/* @vite-ignore */ `/@blogData?t=${Date.now()}`).then((data) => {
+      blogData.value = data.default
+    })
+    const classifier = computed(
+      () => blogData.value && blogData.value[blogId.value]
+    )
+    const basePath = computed<string | undefined>(() =>
+      classifier.value !== undefined
+        ? classifier.value.keys === undefined
+          ? classifier.value.path
+          : `${classifier.value.path}${blogKey.value}/`
+        : undefined
+    )
+    const totalPages = computed(() =>
+      classifier.value !== undefined &&
+      classifier.value.values[blogKey.value] !== undefined
+        ? classifier.value.values[blogKey.value].totalPages
+        : undefined
     )
     const prevLink = computed<string | undefined>(() =>
-      blogPage.value === 1
-        ? basePath.value
-        : blogPage.value > 1
-        ? `${basePath.value}page/${blogPage.value - 1}/`
+      basePath.value !== undefined
+        ? blogPage.value === 1
+          ? basePath.value
+          : blogPage.value > 1
+          ? `${basePath.value}page/${blogPage.value - 1}/`
+          : undefined
         : undefined
     )
     const nextLink = computed<string | undefined>(() =>
-      blogPage.value + 1 < classifier.value.values[blogKey.value].totalPages
-        ? `${basePath.value}page/${blogPage.value + 1}/`
+      basePath.value !== undefined && totalPages.value !== undefined
+        ? blogPage.value + 1 < totalPages.value
+          ? `${basePath.value}page/${blogPage.value + 1}/`
+          : undefined
         : undefined
     )
     const reloadPages = () => {
