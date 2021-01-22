@@ -5,7 +5,7 @@ import path from 'path'
 
 export interface VitepressPluginOption extends VitePlugin {
   configMarkdown?: (config: MarkdownIt.Options) => MarkdownIt.Options
-  extendMarkdown?: (md: MarkdownIt) => MarkdownIt
+  extendMarkdown?: (md: MarkdownIt) => void
   enhanceAppFile?: string
 }
 
@@ -79,6 +79,14 @@ export class PluginApi {
       }
     }
     return config
+  }
+
+  extendMarkdown(md: MarkdownIt): void {
+    for (const plugin of this.plugins) {
+      if (plugin.extendMarkdown) {
+        plugin.extendMarkdown(md)
+      }
+    }
   }
 
   collectEnhanceAppFiles(): string[] {

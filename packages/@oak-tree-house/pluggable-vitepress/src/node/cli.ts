@@ -35,6 +35,7 @@ async function main(): Promise<void> {
       linkify: true
     })
   )
+  pluginApi.extendMarkdown(md)
   const renderer = createMarkdownRender(md)
 
   const server = await createServer({

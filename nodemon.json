@@ -1,7 +1,8 @@
 {
   "watch": [
     "packages/@oak-tree-house/pluggable-vitepress/src",
-    "packages/@oak-tree-house/vitepress-plugin-blog/src"
+    "packages/@oak-tree-house/vitepress-plugin-blog/src",
+    "packages/@oak-tree-house/vitepress-plugin-mathjax/src"
   ],
   "ext": "ts,vue,json",
   "exec": "yarn run build && yarn run start"

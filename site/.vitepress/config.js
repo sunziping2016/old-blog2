@@ -19,6 +19,7 @@ module.exports = {
           lengthPerPage: 10
         }
       ],
-    }]
+    }],
+    ['@oak-tree-house/vitepress-plugin-mathjax']
   ]
 }

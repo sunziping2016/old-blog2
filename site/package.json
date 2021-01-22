@@ -1,4 +1,10 @@
 {
   "private": true,
-  "name": "oak-tree-house-site"
+  "name": "oak-tree-house-site",
+  "version": "0.1.0",
+  "devDependencies": {
+    "@oak-tree-house/pluggable-vitepress": "^0.1.0",
+    "@oak-tree-house/vitepress-plugin-blog": "^0.1.0",
+    "@oak-tree-house/vitepress-plugin-mathjax": "^0.1.0"
+  }
 }
