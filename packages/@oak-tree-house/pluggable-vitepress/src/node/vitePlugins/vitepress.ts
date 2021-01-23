@@ -43,7 +43,6 @@ export default function createVitepressPlugin(): Plugin {
         ]
       }
     },
-
     configureServer(server: ViteDevServer) {
       return () => {
         server.middlewares.use((req, res, next) => {

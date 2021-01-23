@@ -307,6 +307,7 @@ const debounce = (func: any, wait: number) => {
 }
 
 const plugin: BlogPlugin = async (options, context) => {
+  options = options || {}
   const classifiers: Record<string, Classifier> = {}
   if (options.classifiers) {
     for (const option of options.classifiers) {

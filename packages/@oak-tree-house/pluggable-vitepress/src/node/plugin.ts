@@ -15,12 +15,12 @@ export interface VitepressPluginContext {
 }
 
 export type AsyncVitepressPlugin<Options> = (
-  pluginOptions: Options,
+  pluginOptions: Options | undefined,
   context: VitepressPluginContext
 ) => Promise<VitepressPluginOption>
 
 export type SyncVitepressPlugin<Options> = (
-  pluginOptions: Options,
+  pluginOptions: Options | undefined,
   context: VitepressPluginContext
 ) => VitepressPluginOption
 

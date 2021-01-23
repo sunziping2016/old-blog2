@@ -1,13 +1,19 @@
-import { VitepressPlugin } from '@oak-tree-house/pluggable-vitepress'
+import {
+  VitepressPlugin,
+  MarkdownEnv
+} from '@oak-tree-house/pluggable-vitepress'
+import { createCanvas } from 'canvas'
 import StateInline from 'markdown-it/lib/rules_inline/state_inline'
 import StateBlock from 'markdown-it/lib/rules_block/state_block'
 import path from 'path'
+import md5 from 'md5'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import * as mathjax from './mathjax'
+import { ViteDevServer } from 'vite'
 
 export interface MathJaxPluginOptions {
-  formulaPath: string
+  formulaPath?: string
 }
 
 export type MathJaxPlugin = VitepressPlugin<MathJaxPluginOptions>
@@ -160,17 +166,74 @@ function escapeHtml(unsafe: string): string {
     .replace(/'/g, '&#039;')
 }
 
+interface MarkdownMathJaxEnv extends MarkdownEnv {
+  mathjaxInitialized?: true
+}
+
+interface MathJaxItem {
+  files: Set<string>
+  formula: string
+  inline: boolean
+  rendered?: string
+}
+
+class MarkdownMathJaxManger {
+  private readonly hashes: { [hash: string]: MathJaxItem } = {}
+  private readonly file2Hashes: { [path: string]: Set<string> } = {}
+  private readonly renderer: (formula: string, inline: boolean) => string
+
+  constructor(renderer: (formula: string, inline: boolean) => string) {
+    this.renderer = renderer
+  }
+
+  cleanUpFile(path: string) {
+    if (this.file2Hashes[path] === undefined) {
+      return
+    }
+    const hashes = this.file2Hashes[path]
+    delete this.file2Hashes[path]
+    for (const hash of hashes) {
+      this.hashes[hash].files.delete(path)
+      if (this.hashes[hash].files.size === 0) {
+        delete this.hashes[hash]
+      }
+    }
+  }
+  addItem(path: string, formula: string, inline: boolean): string {
+    const hash = md5(`${formula}:${inline}`)
+    const item = (this.hashes[hash] = this.hashes[hash] || {
+      files: new Set<string>(),
+      formula,
+      inline
+    })
+    if (!item.files.has(path)) {
+      item.files.add(path)
+      const file = (this.file2Hashes[path] =
+        this.file2Hashes[path] || new Set<string>())
+      file.add(hash)
+    }
+    return hash
+  }
+  getItem(hash: string): string {
+    const item = this.hashes[hash]
+    if (item.rendered === undefined) {
+      item.rendered = this.renderer(item.formula, item.inline)
+    }
+    return item.rendered
+  }
+}
+
 function mathRender(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adaptor: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   html: any,
-  content: string,
+  formula: string,
   inline: boolean
 ): string {
   try {
     const node = adaptor.firstChild(
-      html.convert(content, {
+      html.convert(formula, {
         display: !inline,
         em: 16,
         ex: 8,
@@ -178,27 +241,60 @@ function mathRender(
       })
     )
     // noinspection TypeScriptValidateJSTypes
-    const output = adaptor.outerHTML(node)
-    return inline ? output : `<p>${output}</p>`
+    return adaptor.outerHTML(node)
   } catch (e) {
-    console.error(`Failed to render formula: ${content}`)
-    console.error(e)
-    return (
-      '' +
-      `<${inline ? 'span' : 'div'} style="color:red">` +
-      `Failed to render formula: ${escapeHtml(content)}` +
-      `</${inline ? 'span' : 'div'}>`
-    )
+    const canvas = createCanvas(0, 0, 'svg')
+    const ctx = canvas.getContext('2d')
+    const metrics = ctx.measureText(e.message)
+    const padding = 2
+    canvas.width =
+      metrics.actualBoundingBoxRight -
+      metrics.actualBoundingBoxLeft +
+      2 * padding
+    canvas.height =
+      metrics.actualBoundingBoxAscent +
+      metrics.actualBoundingBoxDescent +
+      2 * padding
+    ctx.fillStyle = 'red'
+    ctx.fillText(e.message, padding, metrics.actualBoundingBoxAscent + padding)
+    return canvas.toBuffer().toString('utf-8')
   }
 }
 
-const plugin: MathJaxPlugin = () => {
+function mathComponent(
+  formula: string,
+  inline: boolean,
+  path: string,
+  manager: MarkdownMathJaxManger,
+  env: MarkdownMathJaxEnv
+): string {
+  if (env.mathjaxInitialized === undefined) {
+    manager.cleanUpFile(env.relativePath)
+    env.mathjaxInitialized = true
+  }
+  const hash = manager.addItem(env.relativePath, formula, inline)
+  return (
+    `<async-mathjax src="${path}/${hash}.svg" ` +
+    `formula="${escapeHtml(formula)}" v-bind:inline="${inline}"` +
+    `></async-mathjax>`
+  )
+}
+
+const plugin: MathJaxPlugin = (options) => {
   const adaptor = mathjax.liteAdaptor()
   mathjax.RegisterHTMLHandler(adaptor)
   const tex = new mathjax.TeX({ packages: mathjax.AllPackages })
   const svg = new mathjax.SVG({ fontCache: 'local' })
   // noinspection TypeScriptValidateJSTypes
   const html = mathjax.mathjax.document('', { InputJax: tex, OutputJax: svg })
+
+  const renderer = (formula: string, inline: boolean): string =>
+    mathRender(adaptor, html, formula, inline)
+  const manager = new MarkdownMathJaxManger(renderer)
+
+  options = options || {}
+  const formulaPath = options.formulaPath || '/assets/formulas'
+  const formulaPathRegex = new RegExp(`^${formulaPath}/([a-f0-9]{32}).svg$`)
 
   return {
     name: '@oak-tree-house/vitepress-plugin-mathjax',
@@ -208,10 +304,24 @@ const plugin: MathJaxPlugin = () => {
       md.block.ruler.after('blockquote', 'math_block', mathBlock, {
         alt: ['paragraph', 'reference', 'blockquote', 'list']
       })
-      md.renderer.rules.math_inline = (tokens, idx) =>
-        mathRender(adaptor, html, tokens[idx].content, true)
-      md.renderer.rules.math_block = (tokens, idx) =>
-        mathRender(adaptor, html, tokens[idx].content, false)
+      md.renderer.rules.math_inline = (tokens, idx, _, env) =>
+        mathComponent(tokens[idx].content, true, formulaPath, manager, env)
+      md.renderer.rules.math_block = (tokens, idx, _, env) =>
+        mathComponent(tokens[idx].content, false, formulaPath, manager, env)
+    },
+    configureServer(server: ViteDevServer) {
+      return () => {
+        server.middlewares.use((req, res, next) => {
+          let m
+          if (req.url && (m = req.url.match(formulaPathRegex))) {
+            res.statusCode = 200
+            res.setHeader('Content-Type', 'image/svg+xml')
+            res.end(manager.getItem(m[1]))
+            return
+          }
+          next()
+        })
+      }
     }
   }
 }

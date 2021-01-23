@@ -1,7 +1,6 @@
 import { App } from 'vue'
-import { Router } from 'vue-router'
+import AsyncMathjax from './AsyncMathjax'
 
-export default function enhanceApps(app: App, router: Router): void {
-  void app
-  void router
+export default function enhanceApps(app: App): void {
+  app.component('AsyncMathjax', AsyncMathjax)
 }
