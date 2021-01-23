@@ -177,6 +177,7 @@ function mathRender(
         containerWidth: 80 * 16
       })
     )
+    // noinspection TypeScriptValidateJSTypes
     const output = adaptor.outerHTML(node)
     return inline ? output : `<p>${output}</p>`
   } catch (e) {
@@ -196,6 +197,7 @@ const plugin: MathJaxPlugin = () => {
   mathjax.RegisterHTMLHandler(adaptor)
   const tex = new mathjax.TeX({ packages: mathjax.AllPackages })
   const svg = new mathjax.SVG({ fontCache: 'local' })
+  // noinspection TypeScriptValidateJSTypes
   const html = mathjax.mathjax.document('', { InputJax: tex, OutputJax: svg })
 
   return {
@@ -209,7 +211,7 @@ const plugin: MathJaxPlugin = () => {
       md.renderer.rules.math_inline = (tokens, idx) =>
         mathRender(adaptor, html, tokens[idx].content, true)
       md.renderer.rules.math_block = (tokens, idx) =>
-        mathRender(adaptor, html, tokens[idx].content, true)
+        mathRender(adaptor, html, tokens[idx].content, false)
     }
   }
 }

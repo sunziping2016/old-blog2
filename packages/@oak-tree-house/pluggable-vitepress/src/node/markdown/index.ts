@@ -13,9 +13,15 @@ export interface MarkdownParsedData {
   headers?: Header[]
 }
 
+export interface MarkdownEnv {
+  relativePath: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  frontmatter: Record<string, any>
+}
+
 export type MarkdownRenderer = (
   src: string,
-  env?: never
+  env: MarkdownEnv
 ) => { html: string; data: MarkdownParsedData }
 
 export interface MarkdownItWithData extends MarkdownIt {
@@ -79,13 +85,14 @@ export class MarkdownCachedLoader {
     const { content, data: frontmatter, excerpt } = matter(code, {
       excerpt_separator: '<!-- more -->'
     })
+    const env: MarkdownEnv = { relativePath, frontmatter }
     const { html: excerptHtml } = excerpt
-      ? this.renderer(excerpt)
+      ? this.renderer(excerpt, env)
       : { html: '' }
     const {
       html: contentHtml,
       data: { hoistedTags }
-    } = this.renderer(content)
+    } = this.renderer(content, env)
     const pageData: PageData = {
       title: inferTitle(frontmatter, content),
       frontmatter,

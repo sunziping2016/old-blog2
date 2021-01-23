@@ -46,7 +46,7 @@ export default function createVitepressPlugin(): Plugin {
 
     configureServer(server: ViteDevServer) {
       return () => {
-        server.app.use((req, res, next) => {
+        server.middlewares.use((req, res, next) => {
           if (req.url && req.url.endsWith('.html')) {
             res.statusCode = 200
             res.end(HTML_TEMPLATE)
