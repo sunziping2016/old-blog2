@@ -1,5 +1,6 @@
 import { Plugin } from 'vite'
 import qs from 'querystring'
+import fs from 'fs-extra'
 import { MarkdownCachedLoader, MarkdownRenderer } from '../markdown'
 
 export default function createMarkdownPlugin(
@@ -9,6 +10,18 @@ export default function createMarkdownPlugin(
   const mdLoader = new MarkdownCachedLoader(renderer)
   return {
     name: 'markdown',
+    resolveId(id) {
+      const [filename] = id.split(`?`, 2)
+      if (filename.endsWith('.md')) {
+        return id
+      }
+    },
+    async load(id) {
+      const [filename] = id.split(`?`, 2)
+      if (filename.endsWith('.md')) {
+        return await fs.readFile(filename, 'utf-8')
+      }
+    },
     async transform(code, id) {
       const [filename, rawQuery] = id.split(`?`, 2)
       const query = qs.parse(rawQuery || '')

@@ -1,6 +1,7 @@
 import path from 'path'
 import fs from 'fs-extra'
 import chalk from 'chalk'
+import { SiteData } from '../shared/types'
 
 export type UserConfigPlugins =
   | { [name: string]: never }
@@ -8,11 +9,20 @@ export type UserConfigPlugins =
 
 export interface UserConfig {
   base?: string
+  lang?: string
   title?: string
   description?: string
   plugins?: UserConfigPlugins
   theme?: string
   themeConfig?: never
+}
+
+export interface SiteConfig {
+  root: string
+  userConfig: UserConfig
+  siteData: SiteData
+  tempDir: string
+  outDir: string
 }
 
 export function resolvePath(root: string, file: string): string {
@@ -31,4 +41,20 @@ export async function resolveUserConfig(
     console.info(`no config file found.`)
   }
   return userConfig
+}
+
+export async function resolveSiteConfig(root: string): Promise<SiteConfig> {
+  const userConfig = await resolveUserConfig(resolvePath(root, 'config.js'))
+  return {
+    root,
+    userConfig,
+    siteData: {
+      title: userConfig.title || 'VitePress',
+      lang: userConfig.lang || 'en',
+      description: userConfig.description || 'A VitePress site',
+      base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/'
+    },
+    tempDir: resolvePath(root, 'temp'),
+    outDir: resolvePath(root, 'dist')
+  }
 }

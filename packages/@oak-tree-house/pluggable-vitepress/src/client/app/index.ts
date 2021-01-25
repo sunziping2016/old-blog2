@@ -1,10 +1,18 @@
 import 'vite/dynamic-import-polyfill'
-import { App, createApp, createSSRApp, h, readonly } from 'vue'
+import {
+  App,
+  createApp as createClientApp,
+  createSSRApp,
+  h,
+  readonly
+} from 'vue'
 import siteData from '@siteData'
 import createRouter from './router'
 import { Content } from './mixin'
 import enhanceApps from '@enhanceApps'
 import Theme from '@theme/index'
+import { inBrowser } from './utils'
+import { Router } from 'vue-router'
 
 function newApp(): App {
   const app = {
@@ -13,21 +21,28 @@ function newApp(): App {
       return () => h(Theme.Layout)
     }
   }
-  return import.meta.env.PROD ? createSSRApp(app) : createApp(app)
+  return import.meta.env.PROD ? createSSRApp(app) : createClientApp(app)
 }
 
 void import.meta.hot
 
-const app = newApp()
-Object.defineProperty(app.config.globalProperties, '$site', {
-  get: () => readonly(siteData)
-})
-app.component('Content', Content)
-const router = createRouter(siteData.base)
-enhanceApps(app, router, siteData, import.meta.env.PROD).then(() => {
+export function createApp(): Promise<{ app: App; router: Router }> {
+  const app = newApp()
+  Object.defineProperty(app.config.globalProperties, '$site', {
+    get: () => readonly(siteData)
+  })
+  app.component('Content', Content)
+  const router = createRouter(siteData.base)
   app.use(router)
-  app.mount('#app')
-})
+  return enhanceApps(app, router, siteData, import.meta.env.PROD).then(() => {
+    return { app, router }
+  })
+}
 
-// eslint-disable-next-line
-;(window as any).router = router
+if (inBrowser) {
+  createApp().then(({ app, router }) => {
+    router.isReady().then(() => {
+      app.mount('#app', true)
+    })
+  })
+}

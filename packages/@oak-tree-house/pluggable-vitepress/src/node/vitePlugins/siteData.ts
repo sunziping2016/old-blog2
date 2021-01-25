@@ -1,16 +1,10 @@
-import { UserConfig } from '../config'
 import { Plugin } from 'vite'
 import { SiteData } from '../../shared/types'
 
 export const SITE_DATA_ID = '@siteData'
 export const SITE_DATA_REQUEST_PATH = '/' + SITE_DATA_ID
 
-export default function createSiteDataPlugin(userConfig: UserConfig): Plugin {
-  const siteData: SiteData = {
-    title: userConfig.title || 'VitePress',
-    description: userConfig.description || 'A VitePress site',
-    base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/'
-  }
+export default function createSiteDataPlugin(siteData: SiteData): Plugin {
   return {
     name: 'siteData',
     config() {

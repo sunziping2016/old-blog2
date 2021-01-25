@@ -1,15 +1,16 @@
 import { Plugin as VitePlugin } from 'vite'
 import MarkdownIt from 'markdown-it'
-import { UserConfigPlugins } from './config'
+import { SiteConfig, UserConfigPlugins } from './config'
 import path from 'path'
 
 export interface VitepressPluginOption extends VitePlugin {
   configMarkdown?: (config: MarkdownIt.Options) => MarkdownIt.Options
   extendMarkdown?: (md: MarkdownIt) => void
   enhanceAppFile?: string
+  rollupInput?: (ssr: boolean) => Record<string, string>
 }
 
-export interface VitepressPluginContext {
+export interface VitepressPluginContext extends SiteConfig {
   isProd: boolean
   sourceDir: string
 }
@@ -94,6 +95,16 @@ export class PluginApi {
     for (const plugin of this.plugins) {
       if (plugin.enhanceAppFile !== undefined) {
         results.push(plugin.enhanceAppFile)
+      }
+    }
+    return results
+  }
+
+  rollupInput(ssr: boolean): Record<string, string> {
+    const results: Record<string, string> = {}
+    for (const plugin of this.plugins) {
+      if (plugin.rollupInput !== undefined) {
+        Object.assign(results, plugin.rollupInput(ssr))
       }
     }
     return results

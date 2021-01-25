@@ -1,18 +1,20 @@
 import {
+  createMemoryHistory,
   createRouter as baseCreateRouter,
   createWebHistory,
   Router
 } from 'vue-router'
 import { Content } from './mixin'
+import { inBrowser } from './utils'
 
 export default function createRouter(base: string): Router {
   const router = baseCreateRouter({
-    history: createWebHistory(base),
+    history: inBrowser ? createWebHistory(base) : createMemoryHistory(base),
     routes: []
   })
 
   router.addRoute({
-    name: 'default',
+    name: 'page',
     path: '/:pathMatch(.*)*',
     component: Content // TODO: base?
   })

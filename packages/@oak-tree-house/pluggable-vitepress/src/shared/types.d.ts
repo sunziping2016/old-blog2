@@ -2,6 +2,7 @@ import { ComponentOptions } from 'vue'
 
 export interface SiteData {
   base: string
+  lang: string
   title: string
   description: string
 }

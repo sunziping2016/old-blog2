@@ -6,6 +6,7 @@ import slash from 'slash'
 import fs from 'fs-extra'
 import path from 'path'
 import { deeplyParseHeader } from '../parseHeaders'
+import { hoistPlugin } from './hoist'
 
 export interface MarkdownParsedData {
   hoistedTags?: string[]
@@ -30,6 +31,7 @@ export interface MarkdownItWithData extends MarkdownIt {
 
 export function createMarkdownRender(md: MarkdownIt): MarkdownRenderer {
   md.use(componentPlugin)
+  md.use(hoistPlugin)
   const render = md.render
   return (src, env) => {
     ;(md as MarkdownItWithData).__data = {}

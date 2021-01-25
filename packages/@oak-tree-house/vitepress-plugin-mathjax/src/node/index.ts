@@ -11,12 +11,19 @@ import md5 from 'md5'
 // @ts-ignore
 import * as mathjax from './mathjax'
 import { ViteDevServer } from 'vite'
+import fs from 'fs-extra'
 
-export interface MathJaxPluginOptions {
+interface MathJaxPluginOptions {
   formulaPath?: string
 }
 
-export type MathJaxPlugin = VitepressPlugin<MathJaxPluginOptions>
+interface MathJaxPluginNormalizedOptions {
+  formulaPath: string
+  tempDir: string
+  prod: boolean
+}
+
+type MathJaxPlugin = VitepressPlugin<MathJaxPluginOptions>
 
 // from https://github.com/waylonflinn/markdown-it-katex/blob/master/index.js
 function isValidDelimiter(
@@ -170,19 +177,29 @@ interface MarkdownMathJaxEnv extends MarkdownEnv {
   mathjaxInitialized?: true
 }
 
+interface MathjaxRendered {
+  content: string
+  width?: number // ex
+  height?: number // ex
+  verticalAlign?: number // ex
+}
+
 interface MathJaxItem {
   files: Set<string>
   formula: string
   inline: boolean
-  rendered?: string
+  rendered?: MathjaxRendered
 }
 
 class MarkdownMathJaxManger {
   private readonly hashes: { [hash: string]: MathJaxItem } = {}
   private readonly file2Hashes: { [path: string]: Set<string> } = {}
-  private readonly renderer: (formula: string, inline: boolean) => string
+  private readonly renderer: (
+    formula: string,
+    inline: boolean
+  ) => MathjaxRendered
 
-  constructor(renderer: (formula: string, inline: boolean) => string) {
+  constructor(renderer: (formula: string, inline: boolean) => MathjaxRendered) {
     this.renderer = renderer
   }
 
@@ -199,22 +216,24 @@ class MarkdownMathJaxManger {
       }
     }
   }
-  addItem(path: string, formula: string, inline: boolean): string {
+  addItem(path: string, formula: string, inline: boolean): [string, boolean] {
     const hash = md5(`${formula}:${inline}`)
     const item = (this.hashes[hash] = this.hashes[hash] || {
       files: new Set<string>(),
       formula,
       inline
     })
+    let exists = true
     if (!item.files.has(path)) {
       item.files.add(path)
       const file = (this.file2Hashes[path] =
         this.file2Hashes[path] || new Set<string>())
       file.add(hash)
+      exists = false
     }
-    return hash
+    return [hash, exists]
   }
-  getItem(hash: string): string {
+  getItem(hash: string): MathjaxRendered {
     const item = this.hashes[hash]
     if (item.rendered === undefined) {
       item.rendered = this.renderer(item.formula, item.inline)
@@ -230,7 +249,7 @@ function mathRender(
   html: any,
   formula: string,
   inline: boolean
-): string {
+): MathjaxRendered {
   try {
     const node = adaptor.firstChild(
       html.convert(formula, {
@@ -241,8 +260,16 @@ function mathRender(
       })
     )
     // noinspection TypeScriptValidateJSTypes
-    return adaptor.outerHTML(node)
+    return {
+      content: adaptor.outerHTML(node),
+      width: parseFloat(node.attributes.width.slice(0, -2)),
+      height: parseFloat(node.attributes.height.slice(0, -2)),
+      verticalAlign: parseFloat(
+        node.styles.styles['vertical-align'].slice(0, -2)
+      )
+    }
   } catch (e) {
+    console.error(e)
     const canvas = createCanvas(0, 0, 'svg')
     const ctx = canvas.getContext('2d')
     const metrics = ctx.measureText(e.message)
@@ -257,44 +284,72 @@ function mathRender(
       2 * padding
     ctx.fillStyle = 'red'
     ctx.fillText(e.message, padding, metrics.actualBoundingBoxAscent + padding)
-    return canvas.toBuffer().toString('utf-8')
+    return {
+      content: canvas.toBuffer().toString('utf-8'),
+      width: canvas.width / 8,
+      height: canvas.height / 8
+    }
   }
 }
 
 function mathComponent(
   formula: string,
   inline: boolean,
-  path: string,
   manager: MarkdownMathJaxManger,
-  env: MarkdownMathJaxEnv
+  env: MarkdownMathJaxEnv,
+  options: MathJaxPluginNormalizedOptions
 ): string {
   if (env.mathjaxInitialized === undefined) {
     manager.cleanUpFile(env.relativePath)
     env.mathjaxInitialized = true
   }
-  const hash = manager.addItem(env.relativePath, formula, inline)
-  return (
-    `<async-mathjax src="${path}/${hash}.svg" ` +
-    `formula="${escapeHtml(formula)}" v-bind:inline="${inline}"` +
-    `></async-mathjax>`
-  )
+  const [hash, exists] = manager.addItem(env.relativePath, formula, inline)
+  if (options.prod) {
+    const item = manager.getItem(hash)
+    const dest = path.resolve(options.tempDir, `formula.${hash}.svg`)
+    if (!exists) {
+      fs.ensureDirSync(options.tempDir)
+      fs.writeFileSync(dest, item.content)
+    }
+    return (
+      `<img src="${path.relative(path.resolve(env.relativePath), dest)}" ` +
+      `alt="${escapeHtml(formula)}" ` +
+      `style="width: ${item.width}ex;height: ${item.height}ex` +
+      (item.verticalAlign === undefined
+        ? '">'
+        : `;vertical-align: ${item.verticalAlign}ex">`)
+    )
+  } else {
+    return (
+      `<async-mathjax src="${options.formulaPath}/formula.${hash}.svg" ` +
+      `formula="${escapeHtml(formula)}" v-bind:inline="${inline}"` +
+      `></async-mathjax>`
+    )
+  }
 }
 
-const plugin: MathJaxPlugin = (options) => {
-  const adaptor = mathjax.liteAdaptor()
+const plugin: MathJaxPlugin = (options, context) => {
+  const adaptor = new mathjax.MyAdaptor()
   mathjax.RegisterHTMLHandler(adaptor)
   const tex = new mathjax.TeX({ packages: mathjax.AllPackages })
   const svg = new mathjax.SVG({ fontCache: 'local' })
   // noinspection TypeScriptValidateJSTypes
   const html = mathjax.mathjax.document('', { InputJax: tex, OutputJax: svg })
 
-  const renderer = (formula: string, inline: boolean): string =>
+  const renderer = (formula: string, inline: boolean): MathjaxRendered =>
     mathRender(adaptor, html, formula, inline)
   const manager = new MarkdownMathJaxManger(renderer)
 
   options = options || {}
-  const formulaPath = options.formulaPath || '/assets/formulas'
-  const formulaPathRegex = new RegExp(`^${formulaPath}/([a-f0-9]{32}).svg$`)
+  const options2: MathJaxPluginNormalizedOptions = {
+    formulaPath: options.formulaPath || '/assets/formulas',
+    tempDir: path.join(context.tempDir, 'formula'),
+    prod: context.isProd
+  }
+  const formulaPath = options2.formulaPath
+  const formulaPathRegex = new RegExp(
+    `^${formulaPath}/formula.([a-f0-9]{32}).svg$`
+  )
 
   return {
     name: '@oak-tree-house/vitepress-plugin-mathjax',
@@ -305,9 +360,9 @@ const plugin: MathJaxPlugin = (options) => {
         alt: ['paragraph', 'reference', 'blockquote', 'list']
       })
       md.renderer.rules.math_inline = (tokens, idx, _, env) =>
-        mathComponent(tokens[idx].content, true, formulaPath, manager, env)
+        mathComponent(tokens[idx].content, true, manager, env, options2)
       md.renderer.rules.math_block = (tokens, idx, _, env) =>
-        mathComponent(tokens[idx].content, false, formulaPath, manager, env)
+        mathComponent(tokens[idx].content, false, manager, env, options2)
     },
     configureServer(server: ViteDevServer) {
       return () => {
@@ -316,7 +371,7 @@ const plugin: MathJaxPlugin = (options) => {
           if (req.url && (m = req.url.match(formulaPathRegex))) {
             res.statusCode = 200
             res.setHeader('Content-Type', 'image/svg+xml')
-            res.end(manager.getItem(m[1]))
+            res.end(manager.getItem(m[1]).content)
             return
           }
           next()

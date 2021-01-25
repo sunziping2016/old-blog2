@@ -1,30 +1,36 @@
 import path from 'path'
-import { createServer } from 'vite'
+import { createServer, Plugin as VitePlugin } from 'vite'
 import MarkdownIt from 'markdown-it'
 import minimist from 'minimist'
-import { resolvePath, resolveUserConfig } from './config'
+import { resolvePath, resolveSiteConfig } from './config'
 import { PluginApi, VitepressPluginContext } from './plugin'
 import { createMarkdownRender } from './markdown'
 import createVuePlugin from './vitePlugins/vueWrapper'
 import createMarkdownPlugin from './vitePlugins/markdown'
 import createSiteDataPlugin from './vitePlugins/siteData'
-import createVitepressPlugin from './vitePlugins/vitepress'
+import createVitepressPlugin, { APP_PATH } from './vitePlugins/vitepress'
 import createEnhanceAppPlugin from './vitePlugins/enhanceApp'
+import { build } from './build'
+import globby from 'globby'
+import slash from 'slash'
+import { renderPage } from './render'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
-export const root = argv.root || path.join(__dirname, './docs.fallback')
-
 async function main(): Promise<void> {
+  if (argv._[0] === 'build') {
+    process.env.NODE_ENV = 'production'
+  }
+  const root = argv.root || path.join(__dirname, './docs.fallback')
   // Load config
-  const userConfigPath = resolvePath(root, 'config.js')
-  const userConfig = await resolveUserConfig(userConfigPath)
+  const siteConfig = await resolveSiteConfig(root)
   const pluginContext: VitepressPluginContext = {
-    isProd: false,
-    sourceDir: root
+    isProd: process.env.NODE_ENV === 'production',
+    sourceDir: root,
+    ...siteConfig
   }
   const pluginApi = await PluginApi.loadPlugins(
-    userConfig.plugins || [],
+    siteConfig.userConfig.plugins || [],
     pluginContext,
     resolvePath(root, '.')
   )
@@ -37,22 +43,57 @@ async function main(): Promise<void> {
   )
   pluginApi.extendMarkdown(md)
   const renderer = createMarkdownRender(md)
+  const plugins: VitePlugin[] = [
+    ...pluginApi.getVitePlugins(),
+    createVitepressPlugin(),
+    createSiteDataPlugin(siteConfig.siteData),
+    createMarkdownPlugin(renderer, root),
+    createEnhanceAppPlugin(pluginApi.collectEnhanceAppFiles()),
+    createVuePlugin({ include: [/\.vue$/, /\.md$/] })
+  ]
 
-  const server = await createServer({
-    root: root,
-    plugins: [
-      ...pluginApi.getVitePlugins(),
-      createVitepressPlugin(),
-      createSiteDataPlugin(userConfig),
-      createMarkdownPlugin(renderer, root),
-      createEnhanceAppPlugin(pluginApi.collectEnhanceAppFiles()),
-      createVuePlugin({
-        include: [/\.vue$/, /\.md$/],
-        ssr: false
-      })
-    ]
+  const pages = await globby(['**.md'], {
+    cwd: root,
+    ignore: ['node_modules']
   })
-  await server.listen()
+
+  if (argv._[0] === 'build') {
+    await build(
+      siteConfig,
+      plugins,
+      (ssr) => {
+        const input: Record<string, string> = {
+          app: path.join(APP_PATH, 'index.js')
+        }
+        for (const file of pages) {
+          const name = slash(file).replace(/\//g, '_')
+          input['page.' + name] = path.resolve(root, file) + '?content'
+          if (ssr) {
+            input['page_data.' + name] = path.resolve(root, file) + '?pageData'
+          }
+        }
+        Object.assign(input, pluginApi.rollupInput(ssr))
+        return input
+      },
+      async (clientResult, serverPath, appChunk, cssChunk, pageToHashMap) => {
+        await renderPage(
+          siteConfig,
+          pages,
+          clientResult,
+          serverPath,
+          appChunk,
+          cssChunk,
+          pageToHashMap
+        )
+      }
+    )
+  } else {
+    const server = await createServer({
+      root,
+      plugins
+    })
+    await server.listen()
+  }
 }
 
 main().catch((err) => {

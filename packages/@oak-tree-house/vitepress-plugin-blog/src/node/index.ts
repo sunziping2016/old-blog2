@@ -470,6 +470,22 @@ const plugin: BlogPlugin = async (options, context) => {
           }
         }
       }
+    },
+    rollupInput() {
+      const results: Record<string, string> = {
+        'blog.data': '/@blogData'
+      }
+      const blogData = getBlogData()
+      for (const [id, classifier] of Object.entries(blogData)) {
+        for (const [key, value] of Object.entries(classifier.values)) {
+          for (let i = 0; i < value.totalPages; ++i) {
+            results[
+              `blog.${id}_${encodeURIComponent(key)}_${i}`
+            ] = `/@blogData/${id}/${key}/${i}`
+          }
+        }
+      }
+      return results
     }
   }
 }
