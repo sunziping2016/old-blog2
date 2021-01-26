@@ -233,6 +233,30 @@ class MarkdownMathJaxManger {
     }
     return [hash, exists]
   }
+  putCachedResult(hash: string, content: string): MathjaxRendered {
+    const item = this.hashes[hash]
+    const widthMatch = content.match(/width="([0-9.]+)ex"/)
+    if (widthMatch === null) {
+      throw new Error(`Failed to parse formula width for ${hash}`)
+    }
+    const heightMatch = content.match(/height="([0-9.]+)ex"/)
+    if (heightMatch === null) {
+      throw new Error(`Failed to parse formula height for ${hash}`)
+    }
+    const verticalAlignMatch = content.match(
+      /vertical-align:\s*([-0-9.]+)(?:ex)?/
+    )
+    if (verticalAlignMatch === null) {
+      throw new Error(`Failed to parse formula vertical-align for ${hash}`)
+    }
+    item.rendered = {
+      content: content,
+      width: parseFloat(widthMatch[1]),
+      height: parseFloat(heightMatch[1]),
+      verticalAlign: parseFloat(verticalAlignMatch[1])
+    }
+    return item.rendered
+  }
   getItem(hash: string): MathjaxRendered {
     const item = this.hashes[hash]
     if (item.rendered === undefined) {
@@ -262,10 +286,10 @@ function mathRender(
     // noinspection TypeScriptValidateJSTypes
     return {
       content: adaptor.outerHTML(node),
-      width: parseFloat(node.attributes.width.slice(0, -2)),
-      height: parseFloat(node.attributes.height.slice(0, -2)),
+      width: parseFloat(node.attributes.width.slice(0, -2) || '0'),
+      height: parseFloat(node.attributes.height.slice(0, -2) || '0'),
       verticalAlign: parseFloat(
-        node.styles.styles['vertical-align'].slice(0, -2)
+        node.styles.styles['vertical-align'].slice(0, -2) || '0'
       )
     }
   } catch (e) {
@@ -304,10 +328,16 @@ function mathComponent(
     env.mathjaxInitialized = true
   }
   const [hash, exists] = manager.addItem(env.relativePath, formula, inline)
+  let exists2 = exists
+  const dest = path.resolve(options.tempDir, `formula.${hash}.svg`)
+  if (!exists2 && fs.existsSync(dest)) {
+    exists2 = false
+    const content = fs.readFileSync(dest, 'utf-8')
+    manager.putCachedResult(hash, content)
+  }
   if (options.prod) {
     const item = manager.getItem(hash)
-    const dest = path.resolve(options.tempDir, `formula.${hash}.svg`)
-    if (!exists) {
+    if (!exists2) {
       fs.ensureDirSync(options.tempDir)
       fs.writeFileSync(dest, item.content)
     }

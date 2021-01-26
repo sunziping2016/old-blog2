@@ -25,7 +25,7 @@ export default function enhanceApps(app: App, router: Router): void {
           props: (route) => ({
             blogId: id,
             blogKey: 'all',
-            blogPage: parseInt((route.params.page as string) || '0', 10)
+            blogPage: parseInt((route.params.page as string) || '1', 10) - 1
           })
         })
       } else {
@@ -48,7 +48,7 @@ export default function enhanceApps(app: App, router: Router): void {
           props: (route) => ({
             blogId: id,
             blogKey: route.params.key,
-            blogPage: parseInt((route.params.page as string) || '0', 10)
+            blogPage: parseInt((route.params.page as string) || '1', 10) - 1
           })
         })
       }

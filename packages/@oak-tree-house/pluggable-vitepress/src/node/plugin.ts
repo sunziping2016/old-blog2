@@ -2,7 +2,6 @@ import { Plugin as VitePlugin } from 'vite'
 import MarkdownIt from 'markdown-it'
 import { SiteConfig, UserConfigPlugins } from './config'
 import path from 'path'
-import { OutputAsset, OutputChunk, RollupOutput } from 'rollup'
 import { RenderContext } from './render'
 
 export interface VitepressPluginOption extends VitePlugin {

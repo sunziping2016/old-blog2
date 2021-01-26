@@ -13,7 +13,7 @@ export interface RenderContext {
   clientResult: RollupOutput
   serverPath: string
   appChunk: OutputChunk
-  cssChunk: OutputAsset
+  cssChunk: OutputAsset | undefined
   pageToHashMap: Record<string, string>
 }
 
@@ -39,8 +39,12 @@ export function renderHtml(
       ${title}
     </title>
     <meta name="description" content="${siteData.description}">
-    <link rel="stylesheet" href="${siteData.base}${context.cssChunk.fileName}">
-    ${links}
+    ${
+      context.cssChunk === undefined
+        ? ''
+        : `<link rel="stylesheet" ` +
+          `href="${siteData.base}${context.cssChunk.fileName}">\n    `
+    }${links}
   </head>
   <body>
     <div id="app">${content}</div>
@@ -109,7 +113,8 @@ export async function renderPages(
       ) + '?content'
     const outputPath = path.join(
       context.config.outDir,
-      page.replace(/\.md$/, '.html')
+      page.replace(/\.md$/, ''),
+      'index.html'
     )
     await renderPage(title, routePath, pageName, pagePath, outputPath, context)
   }

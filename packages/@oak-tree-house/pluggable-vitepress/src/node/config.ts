@@ -54,7 +54,7 @@ export async function resolveSiteConfig(root: string): Promise<SiteConfig> {
       description: userConfig.description || 'A VitePress site',
       base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/'
     },
-    tempDir: resolvePath(root, 'temp'),
+    tempDir: resolvePath(root, '.temp'),
     outDir: resolvePath(root, 'dist')
   }
 }

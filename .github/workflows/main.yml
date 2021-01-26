@@ -37,4 +37,4 @@ jobs:
         run: |
           npm install -g yarn
           yarn
-          yarn run build:vitepress
+          yarn run build

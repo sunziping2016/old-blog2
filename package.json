@@ -8,13 +8,14 @@
   ],
   "scripts": {
     "watch": "nodemon",
-    "lint": "eslint \"packages/@oak-tree-house/{pluggable-vitepress,vitepress-plugin-blog}/{scripts,src}/**/*.{js,ts,vue}\"",
+    "lint": "eslint \"packages/@oak-tree-house/{pluggable-vitepress,vitepress-plugin-blog,vitepress-plugin-mathjax}/{scripts,src}/**/*.{js,ts,vue}\"",
     "format:js": "prettier --check --write \"packages/@oak-tree-house/pluggable-vitepress/scripts/**/*.js\"",
     "format:ts": "prettier --check --write --parser typescript \"packages/@oak-tree-house/pluggable-vitepress/src/**/*.ts\"",
     "build": "yarn run build:vitepress && yarn run build:plugin-blog && yarn run build:plugin-mathjax",
     "build:vitepress": "cd packages/@oak-tree-house/pluggable-vitepress && yarn run build",
     "build:plugin-blog": "cd packages/@oak-tree-house/vitepress-plugin-blog && yarn run build",
     "build:plugin-mathjax": "cd packages/@oak-tree-house/vitepress-plugin-mathjax && yarn run build",
+    "build:doc": "pluggable-vitepress build --root site",
     "start": "pluggable-vitepress dev --root site",
     "postinstall": "lerna link && husky install"
   },

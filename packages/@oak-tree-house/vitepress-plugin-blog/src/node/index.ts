@@ -478,9 +478,7 @@ const plugin: BlogPlugin = async (options, context) => {
       for (const [id, classifier] of Object.entries(blogData)) {
         for (const [key, value] of Object.entries(classifier.values)) {
           for (let i = 0; i < value.totalPages; ++i) {
-            results[
-              `blog.${id}_${key}_${i}`
-            ] = `/@blogData/${id}/${key}/${i}`
+            results[`blog.${id}_${key}_${i}`] = `/@blogData/${id}/${key}/${i}`
           }
         }
       }
@@ -511,10 +509,10 @@ const plugin: BlogPlugin = async (options, context) => {
               classifier.keys === undefined
                 ? i === 0
                   ? classifier.path
-                  : `${classifier.path}page/${i}/`
+                  : `${classifier.path}page/${i + 1}/`
                 : i === 0
                 ? `${classifier.path}${key}/`
-                : `${classifier.path}${key}/page/${i}/`
+                : `${classifier.path}${key}/page/${i + 1}/`
             const pageName = `blog.${id}_${key}_${i}`
             const pagePath = `/@blogData/${id}/${key}/${i}`
             const outputPath = path.join(

@@ -81,14 +81,14 @@ export function useIndexPost(
       : blogPage.value === 1
       ? basePath.value
       : blogPage.value > 1
-      ? `${basePath.value}page/${blogPage.value - 1}/`
+      ? `${basePath.value}page/${blogPage.value}/`
       : undefined
   )
   const nextLink = computed(() =>
     basePath.value === undefined || classifierKey.value === undefined
       ? undefined
       : blogPage.value + 1 < classifierKey.value.totalPages
-      ? `${basePath.value}page/${blogPage.value + 1}/`
+      ? `${basePath.value}page/${blogPage.value + 2}/`
       : undefined
   )
   const router = useRouter()
