@@ -10,4 +10,10 @@ This is my newest personal homepage, which is under heavy development.
 ```bash
 # Install dependencies
 yarn
+# Build vitepress and plugins
+yarn build
+# Generate webpages
+yarn build:doc
 ```
+
+Then webpages are generated under `site/.vitepress/dist`
