@@ -2,12 +2,15 @@ import { Plugin as VitePlugin } from 'vite'
 import MarkdownIt from 'markdown-it'
 import { SiteConfig, UserConfigPlugins } from './config'
 import path from 'path'
+import { OutputAsset, OutputChunk, RollupOutput } from 'rollup'
+import { RenderContext } from './render'
 
 export interface VitepressPluginOption extends VitePlugin {
   configMarkdown?: (config: MarkdownIt.Options) => MarkdownIt.Options
   extendMarkdown?: (md: MarkdownIt) => void
   enhanceAppFile?: string
   rollupInput?: (ssr: boolean) => Record<string, string>
+  renderPages?: (context: RenderContext) => Promise<void>
 }
 
 export interface VitepressPluginContext extends SiteConfig {
@@ -108,5 +111,13 @@ export class PluginApi {
       }
     }
     return results
+  }
+
+  async renderPages(context: RenderContext): Promise<void> {
+    for (const plugin of this.plugins) {
+      if (plugin.renderPages !== undefined) {
+        await plugin.renderPages(context)
+      }
+    }
   }
 }

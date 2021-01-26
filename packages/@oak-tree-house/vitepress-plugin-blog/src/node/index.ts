@@ -1,6 +1,7 @@
 import {
   VitepressPlugin,
-  inferTitle
+  inferTitle,
+  renderPage
 } from '@oak-tree-house/pluggable-vitepress'
 import dayjs from 'dayjs'
 import globby from 'globby'
@@ -32,12 +33,12 @@ export interface ClassifierOptions {
   pagination?: PaginationOptions
   dirname?: string
   keys?: string[] | string
-  indexPostLayout?: string
-  indexKeyLayout?: string
 }
 
 export interface BlogPluginOptions {
   classifiers?: ClassifierOptions[]
+  indexPostLayout?: string
+  indexKeyLayout?: string
 }
 
 export type BlogPlugin = VitepressPlugin<BlogPluginOptions>
@@ -90,9 +91,6 @@ export class Pagination {
 }
 
 export class Classifier {
-  public readonly indexPostLayout?: string
-  public readonly indexKeyLayout?: string
-
   private readonly id: string
   private readonly path: string
   private readonly title: string
@@ -114,8 +112,6 @@ export class Classifier {
     this.keys = typeof options.keys === 'string' ? [options.keys] : options.keys
     this.pages = {}
     this.keyToPages = {}
-    this.indexPostLayout = options.indexPostLayout
-    this.indexKeyLayout = options.indexKeyLayout
   }
   exportData(): BlogDataItem {
     const lengthPerPage = this.pagination.getLengthPerPage()
@@ -282,7 +278,7 @@ export class Classifier {
 }
 
 const BLOG_PATH_RE = /^\/@blogData(?:$|\/([^/]+)\/([^/]+)\/([^/]+))/
-const BLOG_PAGE_RE = /^\/@blog\/([^/]+)\/(post|key)/
+const BLOG_PAGE_RE = /^\/@blog\/(post|key)/
 
 const DEFAULT_INDEX_POST_LAYOUT = path.join(
   __dirname,
@@ -307,10 +303,10 @@ const debounce = (func: any, wait: number) => {
 }
 
 const plugin: BlogPlugin = async (options, context) => {
-  options = options || {}
+  const options2: BlogPluginOptions = options || {}
   const classifiers: Record<string, Classifier> = {}
-  if (options.classifiers) {
-    for (const option of options.classifiers) {
+  if (options2.classifiers) {
+    for (const option of options2.classifiers) {
       classifiers[option.id] = new Classifier(option)
     }
   }
@@ -352,6 +348,10 @@ const plugin: BlogPlugin = async (options, context) => {
           {
             find: /^@blogData($|\/.*)/,
             replacement: '/@blogData$1'
+          },
+          {
+            find: /^@blog($|\/.*)/,
+            replacement: '/@blog$1'
           }
         ]
       }
@@ -457,15 +457,14 @@ const plugin: BlogPlugin = async (options, context) => {
         }
       } else {
         const m2 = id.match(BLOG_PAGE_RE)
-        if (m2 && classifiers[m2[1]] !== undefined) {
-          const classifier = classifiers[m2[1]]
-          if (m2[2] === 'post') {
+        if (m2) {
+          if (m2[1] === 'post') {
             return `export { default } from "/@fs/${
-              classifier.indexPostLayout || DEFAULT_INDEX_POST_LAYOUT
+              options2.indexPostLayout || DEFAULT_INDEX_POST_LAYOUT
             }"\n`
-          } else if (m2[2] === 'key') {
+          } else if (m2[1] === 'key') {
             return `export { default } from "/@fs/${
-              classifier.indexKeyLayout || DEFAULT_INDEX_KEY_LAYOUT
+              options2.indexKeyLayout || DEFAULT_INDEX_KEY_LAYOUT
             }"\n`
           }
         }
@@ -480,12 +479,60 @@ const plugin: BlogPlugin = async (options, context) => {
         for (const [key, value] of Object.entries(classifier.values)) {
           for (let i = 0; i < value.totalPages; ++i) {
             results[
-              `blog.${id}_${encodeURIComponent(key)}_${i}`
+              `blog.${id}_${key}_${i}`
             ] = `/@blogData/${id}/${key}/${i}`
           }
         }
       }
       return results
+    },
+    async renderPages(context) {
+      const blogData = getBlogData()
+      for (const [id, classifier] of Object.entries(blogData)) {
+        if (classifier.keys !== undefined) {
+          const title = `${classifier.title} | ${context.config.siteData.title}`
+          const routePath = classifier.path
+          const outputPath = path.join(
+            context.config.outDir,
+            routePath,
+            'index.html'
+          )
+          await renderPage(title, routePath, null, null, outputPath, context)
+        }
+        for (const [key, value] of Object.entries(classifier.values)) {
+          for (let i = 0; i < value.totalPages; ++i) {
+            const title =
+              (i === 0 ? '' : `Page ${i + 1} | `) +
+              (classifier.keys === undefined
+                ? `${classifier.title} | `
+                : `${key} ${classifier.title} | `) +
+              context.config.siteData.title
+            const routePath =
+              classifier.keys === undefined
+                ? i === 0
+                  ? classifier.path
+                  : `${classifier.path}page/${i}/`
+                : i === 0
+                ? `${classifier.path}${key}/`
+                : `${classifier.path}${key}/page/${i}/`
+            const pageName = `blog.${id}_${key}_${i}`
+            const pagePath = `/@blogData/${id}/${key}/${i}`
+            const outputPath = path.join(
+              context.config.outDir,
+              routePath,
+              'index.html'
+            )
+            await renderPage(
+              title,
+              routePath,
+              pageName,
+              pagePath,
+              outputPath,
+              context
+            )
+          }
+        }
+      }
     }
   }
 }

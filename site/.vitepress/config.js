@@ -8,6 +8,7 @@ module.exports = {
         {
           id: 'post',
           dirname: '_posts',
+          title: '文章',
           path: '/',
           lengthPerPage: 10
         },

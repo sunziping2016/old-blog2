@@ -33,8 +33,8 @@ export function createApp(): Promise<{ app: App; router: Router }> {
   })
   app.component('Content', Content)
   const router = createRouter(siteData.base)
-  app.use(router)
   return enhanceApps(app, router, siteData, import.meta.env.PROD).then(() => {
+    app.use(router)
     return { app, router }
   })
 }

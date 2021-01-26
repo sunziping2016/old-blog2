@@ -1,4 +1,4 @@
-import { defineComponent, ComponentOptions, h } from 'vue'
+import { defineComponent, ComponentOptions, h, defineAsyncComponent } from 'vue'
 import { inBrowser } from './utils'
 import { useRoute } from 'vue-router'
 
@@ -9,16 +9,15 @@ function pathToFile(path: string): string {
   }
   if (import.meta.env.DEV) {
     path += `.md?t=${Date.now()}&content`
+  } else if (inBrowser) {
+    const base = import.meta.env.BASE_URL
+    path = path.slice(base.length).replace(/\//g, '_') + '.md'
+    const pageName = 'page.' + path
+    const pageHash = __VP_HASH_MAP__[pageName.toLowerCase()]
+    path = `${base}assets/scripts/${pageName}.${pageHash}.js`
   } else {
-    if (inBrowser) {
-      const base = import.meta.env.BASE_URL
-      path = path.slice(base.length).replace(/\//g, '_') + '.md'
-      const pageHash = __VP_HASH_MAP__['page.' + path.toLowerCase()]
-      path = `${base}assets/scripts/page.${path}.${pageHash}.js`
-    } else {
-      // ssr build uses much simpler name mapping
-      path = `./page.${path.slice(1).replace(/\//g, '_')}.md.js`
-    }
+    // ssr build uses much simpler name mapping
+    path = `./page.${path.slice(1).replace(/\//g, '_')}.md.js`
   }
   return path
 }
@@ -28,9 +27,7 @@ export function loadPageModule(
 ): ComponentOptions | Promise<ComponentOptions> {
   const pageFilePath = pathToFile(path)
   if (inBrowser) {
-    return import(/* @vite-ignore */ pageFilePath).then(
-      (result) => result.default
-    )
+    return defineAsyncComponent(() => import(/* @vite-ignore */ pageFilePath))
   }
   // eslint-disable-next-line
   return require(pageFilePath).default
@@ -38,9 +35,8 @@ export function loadPageModule(
 
 export const Content = defineComponent({
   name: 'Content',
-  async setup() {
+  setup() {
     const route = useRoute()
-    const component = await loadPageModule(route.path)
-    return () => h(component)
+    return () => h(loadPageModule(route.path))
   }
 })

@@ -13,7 +13,7 @@ import createEnhanceAppPlugin from './vitePlugins/enhanceApp'
 import { build } from './build'
 import globby from 'globby'
 import slash from 'slash'
-import { renderPage } from './render'
+import { renderPages } from './render'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
@@ -75,16 +75,9 @@ async function main(): Promise<void> {
         Object.assign(input, pluginApi.rollupInput(ssr))
         return input
       },
-      async (clientResult, serverPath, appChunk, cssChunk, pageToHashMap) => {
-        await renderPage(
-          siteConfig,
-          pages,
-          clientResult,
-          serverPath,
-          appChunk,
-          cssChunk,
-          pageToHashMap
-        )
+      async (context) => {
+        await renderPages(pages, context)
+        await pluginApi.renderPages(context)
       }
     )
   } else {

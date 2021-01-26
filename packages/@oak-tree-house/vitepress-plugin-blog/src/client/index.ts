@@ -1,21 +1,12 @@
 import { computed, ref, Ref, ComputedRef, ComponentOptions, watch } from 'vue'
-import { BlogData, BlogDataItem } from '@types'
+import { BlogDataItem } from '@types'
 import { PageData } from '@oak-tree-house/pluggable-vitepress/dist/client/index'
 import { NavigationFailure, useRouter } from 'vue-router'
+import initialBlogData from '@blogData'
+import { inBrowser } from '@oak-tree-house/pluggable-vitepress/dist/client/app/utils'
 
-export const blogData = ref<BlogData>()
-export const blogDataLoading = ref<boolean>(true)
+export const blogData = ref(initialBlogData)
 
-import(/* @vite-ignore */ `/@blogData?t=${Date.now()}`)
-  .then((data) => {
-    blogData.value = data.default
-  })
-  .catch((err) => {
-    console.error(err)
-  })
-  .then(() => {
-    blogDataLoading.value = false
-  })
 if (import.meta.hot) {
   import.meta.hot?.on('plugin-blog:blogData', ({ blogData: newBlogData }) => {
     blogData.value = newBlogData
@@ -27,11 +18,22 @@ export function useIndexKey(
 ): {
   classifier: ComputedRef<BlogDataItem | undefined>
 } {
-  const classifier = computed(
-    () => blogData.value && blogData.value[blogId.value]
-  )
+  const classifier = computed(() => blogData.value[blogId.value])
   return {
     classifier
+  }
+}
+
+function computeIndexPath(id: string, key: string, page: number): string {
+  if (import.meta.env.DEV) {
+    return `/@blogData/${id}/${key}/${page}?t=${Date.now()}`
+  } else if (inBrowser) {
+    const base = import.meta.env.BASE_URL
+    const pageName = `blog.${id}_${key}_${page}`
+    const pageHash = __VP_HASH_MAP__[pageName.toLowerCase()]
+    return `${base}assets/scripts/${pageName}.${pageHash}.js`
+  } else {
+    return `./blog.${id}_${key}_${page}.js`
   }
 }
 
@@ -112,9 +114,11 @@ export function useIndexPost(
       return
     }
     pagesLoading.value = true
-    return import(
-      /* @vite-ignore */ `/@blogData/${blogId.value}/${blogKey.value}/${blogPage.value}?` +
-        `t=${Date.now()}`
+
+    const path = computeIndexPath(blogId.value, blogKey.value, blogPage.value)
+    return (inBrowser
+      ? import(/* @vite-ignore */ path)
+      : Promise.resolve().then(() => require(path))
     )
       .then((data) => {
         pages.value = data.default

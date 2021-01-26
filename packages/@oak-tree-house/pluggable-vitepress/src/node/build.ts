@@ -8,6 +8,7 @@ import {
 import { SiteConfig } from './config'
 import { OutputChunk, OutputAsset } from 'rollup'
 import path from 'path'
+import { RenderContext } from './render'
 
 function serverPath(siteConfig: SiteConfig): string {
   return path.join(siteConfig.tempDir, 'server')
@@ -101,7 +102,6 @@ export async function bundle(
 ): Promise<[RollupOutput, string, Record<string, string>]> {
   let clientResult: RollupOutput
   const pageToHashMap: Record<string, string> = {}
-
   const spinner = ora()
   spinner.start('building client + server bundles...')
   try {
@@ -130,43 +130,40 @@ export async function bundle(
 }
 
 export async function build(
-  siteConfig: SiteConfig,
+  config: SiteConfig,
   plugins: VitePlugin[],
   input: (ssr: boolean) => Record<string, string>,
-  renderer: (
-    clientResult: RollupOutput,
-    serverPath: string,
-    appChunk: OutputChunk,
-    cssChunk: OutputAsset,
-    pageToHashMap: Record<string, string>
-  ) => Promise<void>
+  renderer: (context: RenderContext) => Promise<void>
 ): Promise<void> {
   try {
     const [clientResult, serverPath, pageToHashMap] = await bundle(
-      siteConfig,
+      config,
       plugins,
       input
     )
-
     const spinner = ora()
     spinner.start('rendering pages...')
-
     try {
       const appChunk = clientResult.output.find(
         (chunk) => chunk.type === 'chunk' && chunk.isEntry && chunk
       ) as OutputChunk
-
       const cssChunk = clientResult.output.find(
         (chunk) => chunk.type === 'asset' && chunk.fileName.endsWith('.css')
       ) as OutputAsset
-
-      await renderer(
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { createApp } = require(path.join(serverPath, 'app.js'))
+      const { app, router } = await createApp()
+      const context: RenderContext = {
+        app,
+        router,
+        config,
         clientResult,
         serverPath,
         appChunk,
         cssChunk,
         pageToHashMap
-      )
+      }
+      await renderer(context)
     } catch (e) {
       spinner.stopAndPersist({
         symbol: failMark
