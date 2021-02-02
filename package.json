@@ -15,7 +15,7 @@
     "build:vitepress": "cd packages/@oak-tree-house/pluggable-vitepress && yarn run build",
     "build:plugin-blog": "cd packages/@oak-tree-house/vitepress-plugin-blog && yarn run build",
     "build:plugin-mathjax": "cd packages/@oak-tree-house/vitepress-plugin-mathjax && yarn run build",
-    "build:doc": "pluggable-vitepress build --root site",
+    "build:site": "pluggable-vitepress build --root site",
     "start": "pluggable-vitepress dev --root site",
     "postinstall": "lerna link && husky install"
   },

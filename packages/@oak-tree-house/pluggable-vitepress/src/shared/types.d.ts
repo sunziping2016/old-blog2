@@ -5,6 +5,8 @@ export interface SiteData {
   lang: string
   title: string
   description: string
+  themeConfig?: never
+  pages: string[]
 }
 
 export interface PageData {
@@ -23,5 +25,5 @@ export interface Header {
 
 export interface Theme {
   Layout: ComponentOptions
-  NotFound?: ComponentOptions
+  NotFound: ComponentOptions
 }

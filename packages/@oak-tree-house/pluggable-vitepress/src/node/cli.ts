@@ -11,7 +11,6 @@ import createSiteDataPlugin from './vitePlugins/siteData'
 import createVitepressPlugin, { APP_PATH } from './vitePlugins/vitepress'
 import createEnhanceAppPlugin from './vitePlugins/enhanceApp'
 import { build } from './build'
-import globby from 'globby'
 import slash from 'slash'
 import { renderPages } from './render'
 
@@ -45,17 +44,12 @@ async function main(): Promise<void> {
   const renderer = createMarkdownRender(md)
   const plugins: VitePlugin[] = [
     ...pluginApi.getVitePlugins(),
-    createVitepressPlugin(),
-    createSiteDataPlugin(siteConfig.siteData),
+    createVitepressPlugin(siteConfig.userConfig),
+    createSiteDataPlugin(siteConfig.siteData, root),
     createMarkdownPlugin(renderer, root),
     createEnhanceAppPlugin(pluginApi.collectEnhanceAppFiles()),
     createVuePlugin({ include: [/\.vue$/, /\.md$/] })
   ]
-
-  const pages = await globby(['**.md'], {
-    cwd: root,
-    ignore: ['node_modules']
-  })
 
   if (argv._[0] === 'build') {
     await build(
@@ -65,7 +59,7 @@ async function main(): Promise<void> {
         const input: Record<string, string> = {
           app: path.join(APP_PATH, 'index.js')
         }
-        for (const file of pages) {
+        for (const file of siteConfig.siteData.pages) {
           const name = slash(file).replace(/\//g, '_')
           input['page.' + name] = path.resolve(root, file) + '?content'
           if (ssr) {
@@ -76,7 +70,7 @@ async function main(): Promise<void> {
         return input
       },
       async (context) => {
-        await renderPages(pages, context)
+        await renderPages(context)
         await pluginApi.renderPages(context)
       }
     )

@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs-extra'
 import chalk from 'chalk'
 import { SiteData } from '../shared/types'
+import globby from 'globby'
 
 export type UserConfigPlugins =
   | { [name: string]: never }
@@ -13,7 +14,7 @@ export interface UserConfig {
   title?: string
   description?: string
   plugins?: UserConfigPlugins
-  theme?: string
+  theme?: Record<string, string>
   themeConfig?: never
 }
 
@@ -45,6 +46,10 @@ export async function resolveUserConfig(
 
 export async function resolveSiteConfig(root: string): Promise<SiteConfig> {
   const userConfig = await resolveUserConfig(resolvePath(root, 'config.js'))
+  const pages = await globby(['**.md'], {
+    cwd: root,
+    ignore: ['node_modules']
+  })
   return {
     root,
     userConfig,
@@ -52,7 +57,9 @@ export async function resolveSiteConfig(root: string): Promise<SiteConfig> {
       title: userConfig.title || 'VitePress',
       lang: userConfig.lang || 'en',
       description: userConfig.description || 'A VitePress site',
-      base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/'
+      base: userConfig.base ? userConfig.base.replace(/([^/])$/, '$1/') : '/',
+      themeConfig: userConfig.themeConfig,
+      pages
     },
     tempDir: resolvePath(root, '.temp'),
     outDir: resolvePath(root, 'dist')

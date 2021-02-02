@@ -5,7 +5,7 @@ import { useRoute } from 'vue-router'
 function pathToFile(path: string): string {
   path = path.replace(/\.html$/, '')
   if (path.endsWith('/')) {
-    path += `index`
+    path = path.slice(0, -1)
   }
   if (import.meta.env.DEV) {
     path += `.md?t=${Date.now()}&content`

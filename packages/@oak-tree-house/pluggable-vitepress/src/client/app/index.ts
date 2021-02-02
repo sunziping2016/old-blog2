@@ -6,11 +6,11 @@ import {
   h,
   readonly
 } from 'vue'
-import siteData from '@siteData'
+import { siteData } from './siteData'
 import createRouter from './router'
 import { Content } from './mixin'
 import enhanceApps from '@enhanceApps'
-import Theme from '@theme/index'
+import GlobalLayout from '@theme/GlobalLayout'
 import { inBrowser } from './utils'
 import { Router } from 'vue-router'
 
@@ -18,7 +18,7 @@ function newApp(): App {
   const app = {
     name: 'OakApp',
     setup() {
-      return () => h(Theme.Layout)
+      return () => h(GlobalLayout)
     }
   }
   return import.meta.env.PROD ? createSSRApp(app) : createClientApp(app)
@@ -32,7 +32,7 @@ export function createApp(): Promise<{ app: App; router: Router }> {
     get: () => readonly(siteData)
   })
   app.component('Content', Content)
-  const router = createRouter(siteData.base)
+  const router = createRouter(siteData.value.base)
   return enhanceApps(app, router, siteData, import.meta.env.PROD).then(() => {
     app.use(router)
     return { app, router }

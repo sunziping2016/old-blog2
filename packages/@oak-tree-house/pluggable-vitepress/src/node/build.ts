@@ -9,6 +9,8 @@ import { SiteConfig } from './config'
 import { OutputChunk, OutputAsset } from 'rollup'
 import path from 'path'
 import { RenderContext } from './render'
+import rimraf from 'rimraf'
+import { promisify } from 'util'
 
 function serverPath(siteConfig: SiteConfig): string {
   return path.join(siteConfig.tempDir, 'server')
@@ -136,6 +138,7 @@ export async function build(
   renderer: (context: RenderContext) => Promise<void>
 ): Promise<void> {
   try {
+    await promisify(rimraf)(config.outDir)
     const [clientResult, serverPath, pageToHashMap] = await bundle(
       config,
       plugins,

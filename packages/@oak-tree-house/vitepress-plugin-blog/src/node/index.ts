@@ -1,7 +1,9 @@
 import {
   VitepressPlugin,
   inferTitle,
-  renderPage
+  renderPage,
+  readModifiedFile,
+  debounce
 } from '@oak-tree-house/pluggable-vitepress'
 import dayjs from 'dayjs'
 import globby from 'globby'
@@ -278,29 +280,7 @@ export class Classifier {
 }
 
 const BLOG_PATH_RE = /^\/@blogData(?:$|\/([^/]+)\/([^/]+)\/([^/]+))/
-const BLOG_PAGE_RE = /^\/@blog\/(post|key)/
-
-const DEFAULT_INDEX_POST_LAYOUT = path.join(
-  __dirname,
-  '../client/IndexPost.vue'
-)
-const DEFAULT_INDEX_KEY_LAYOUT = path.join(__dirname, '../client/IndexKey.vue')
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const debounce = (func: any, wait: number) => {
-  let timeout: NodeJS.Timeout | null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function executedFunction(...args: any[]) {
-    const later = () => {
-      timeout = null
-      func(...args)
-    }
-    if (timeout !== null) {
-      clearTimeout(timeout)
-    }
-    timeout = setTimeout(later, wait)
-  }
-}
+const THEME_RE = /^\/@theme\/(IndexPost|IndexKey)/
 
 const plugin: BlogPlugin = async (options, context) => {
   const options2: BlogPluginOptions = options || {}
@@ -312,7 +292,7 @@ const plugin: BlogPlugin = async (options, context) => {
   }
   async function loadMarkdownFile(file: string): Promise<MarkdownFile> {
     const full_path = path.join(context.sourceDir, file)
-    const src = await fs.readFile(full_path)
+    const src = await readModifiedFile(full_path)
     const { content, data: frontmatter } = matter(src)
     return {
       relativePath: slash(file),
@@ -420,16 +400,25 @@ const plugin: BlogPlugin = async (options, context) => {
         }
       }
       server.watcher.on('change', (file) => {
+        if (!file.endsWith('.md')) {
+          return
+        }
         updateFile(path.relative(context.sourceDir, file)).catch((err) =>
           console.error(err)
         )
       })
       server.watcher.on('add', (file) => {
+        if (!file.endsWith('.md')) {
+          return
+        }
         updateFile(path.relative(context.sourceDir, file)).catch((err) =>
           console.error(err)
         )
       })
       server.watcher.on('unlink', (file) => {
+        if (!file.endsWith('.md')) {
+          return
+        }
         removeFile(path.relative(context.sourceDir, file))
       })
     },
@@ -437,11 +426,8 @@ const plugin: BlogPlugin = async (options, context) => {
       const m1 = id.match(BLOG_PATH_RE)
       if (m1 && (m1[1] === undefined || classifiers[m1[1]] !== undefined)) {
         return id
-      } else {
-        const m2 = id.match(BLOG_PAGE_RE)
-        if (m2 && classifiers[m2[1]] !== undefined) {
-          return id
-        }
+      } else if (id.match(THEME_RE)) {
+        return id
       }
     },
     load(id) {
@@ -456,17 +442,18 @@ const plugin: BlogPlugin = async (options, context) => {
           return classifier.generateFetchPagesCode(key, page)
         }
       } else {
-        const m2 = id.match(BLOG_PAGE_RE)
+        const m2 = id.match(THEME_RE)
         if (m2) {
-          if (m2[1] === 'post') {
-            return `export { default } from "/@fs/${
-              options2.indexPostLayout || DEFAULT_INDEX_POST_LAYOUT
-            }"\n`
-          } else if (m2[1] === 'key') {
-            return `export { default } from "/@fs/${
-              options2.indexKeyLayout || DEFAULT_INDEX_KEY_LAYOUT
-            }"\n`
+          let component: string = path.resolve(
+            __dirname,
+            '../client',
+            m2[1] + '.vue'
+          )
+          const theme = context.userConfig.theme
+          if (theme && theme[m2[1]] !== undefined) {
+            component = theme[m2[1]]
           }
+          return `export { default } from "/@fs/${component}"\n`
         }
       }
     },

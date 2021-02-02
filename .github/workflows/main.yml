@@ -38,3 +38,4 @@ jobs:
           npm install -g yarn
           yarn
           yarn run build
+          yarn run build:site

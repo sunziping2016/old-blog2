@@ -91,11 +91,8 @@ export async function renderPage(
   await fs.writeFile(outputPath, html)
 }
 
-export async function renderPages(
-  pages: string[],
-  context: RenderContext
-): Promise<void> {
-  for (const page of pages) {
+export async function renderPages(context: RenderContext): Promise<void> {
+  for (const page of context.config.siteData.pages) {
     const partialPageName = page.replace(/\//g, '_')
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const pageData = require(path.join(

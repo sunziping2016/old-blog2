@@ -23,3 +23,9 @@ declare module '@blog/key' {
   const comp: ComponentOptions
   export default comp
 }
+
+declare module '@theme/*' {
+  import { ComponentOptions } from 'vue'
+  const comp: ComponentOptions
+  export default comp
+}

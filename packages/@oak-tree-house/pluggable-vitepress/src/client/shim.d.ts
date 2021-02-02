@@ -13,14 +13,20 @@ declare module '@siteData' {
 }
 
 declare module '@enhanceApps' {
-  import { App } from 'vue'
+  import { App, Ref } from 'vue'
   import { Router } from 'vue-router'
   import { SiteData } from '@types'
   function enhanceApps(
     app: App,
     router: Router,
-    siteData: SiteData,
+    siteData: Ref<SiteData>,
     isServer: boolean
   ): Promise<void>
   export default enhanceApps
+}
+
+declare module '@theme/*' {
+  import { ComponentOptions } from 'vue'
+  const comp: ComponentOptions
+  export default comp
 }
