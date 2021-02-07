@@ -22,28 +22,44 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, toRefs } from 'vue'
+<script setup lang="ts">
+import { defineProps, toRefs } from 'vue'
 import { useIndexPost } from './index'
 
-export default defineComponent({
-  props: {
-    blogId: {
-      type: String,
-      required: true
-    },
-    blogKey: {
-      type: String,
-      required: true
-    },
-    blogPage: {
-      type: Number,
-      default: 0
-    }
+const props = defineProps({
+  blogId: {
+    type: String,
+    required: true
   },
-  setup(props: { blogId: string; blogKey: string; blogPage: number }) {
-    const { blogId, blogKey, blogPage } = toRefs(props)
-    return useIndexPost(blogId, blogKey, blogPage)
+  blogKey: {
+    type: String,
+    default: 'all'
+  },
+  blogPage: {
+    type: Number,
+    default: 0
   }
 })
+
+const { blogId, blogKey, blogPage } = toRefs(props)
+
+const {
+  classifier,
+  classifierKey,
+  pagesLoading,
+  pages,
+  prevLink,
+  nextLink,
+  goPrevLink,
+  goNextLink
+} = useIndexPost(blogId, blogKey, blogPage)
 </script>
+
+<style scoped>
+h3 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+</style>

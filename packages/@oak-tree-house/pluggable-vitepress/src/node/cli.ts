@@ -13,6 +13,7 @@ import createEnhanceAppPlugin from './vitePlugins/enhanceApp'
 import { build } from './build'
 import slash from 'slash'
 import { renderPages } from './render'
+import { ThemeApi, VitepressThemeContext } from './theme'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
@@ -23,9 +24,15 @@ async function main(): Promise<void> {
   const root = argv.root || path.join(__dirname, './docs.fallback')
   // Load config
   const siteConfig = await resolveSiteConfig(root)
+  const themeContext: VitepressThemeContext = siteConfig
+  const themeApi = await ThemeApi.loadTheme(
+    siteConfig.userConfig.theme,
+    siteConfig.userConfig.themeConfig,
+    themeContext,
+    resolvePath(root, '.')
+  )
   const pluginContext: VitepressPluginContext = {
-    isProd: process.env.NODE_ENV === 'production',
-    sourceDir: root,
+    theme: themeApi,
     ...siteConfig
   }
   const pluginApi = await PluginApi.loadPlugins(
@@ -44,10 +51,14 @@ async function main(): Promise<void> {
   const renderer = createMarkdownRender(md)
   const plugins: VitePlugin[] = [
     ...pluginApi.getVitePlugins(),
-    createVitepressPlugin(siteConfig.userConfig),
+    createVitepressPlugin(themeApi),
     createSiteDataPlugin(siteConfig.siteData, root),
     createMarkdownPlugin(renderer, root),
-    createEnhanceAppPlugin(pluginApi.collectEnhanceAppFiles()),
+    createEnhanceAppPlugin(
+      themeApi
+        .collectEnhanceAppFiles()
+        .concat(pluginApi.collectEnhanceAppFiles())
+    ),
     createVuePlugin({ include: [/\.vue$/, /\.md$/] })
   ]
 
@@ -62,9 +73,7 @@ async function main(): Promise<void> {
         for (const file of siteConfig.siteData.pages) {
           const name = slash(file).replace(/\//g, '_')
           input['page.' + name] = path.resolve(root, file) + '?content'
-          if (ssr) {
-            input['page_data.' + name] = path.resolve(root, file) + '?pageData'
-          }
+          input['page_data.' + name] = path.resolve(root, file) + '?pageData'
         }
         Object.assign(input, pluginApi.rollupInput(ssr))
         return input

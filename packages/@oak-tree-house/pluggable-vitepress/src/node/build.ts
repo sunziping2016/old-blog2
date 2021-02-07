@@ -25,6 +25,7 @@ export function resolveViteConfig(
 ): ViteUserConfig {
   return {
     root: siteConfig.root,
+    base: siteConfig.siteData.base,
     plugins: [
       ...plugins,
       {
@@ -56,7 +57,6 @@ export function resolveViteConfig(
     ],
     build: {
       ssr,
-      base: siteConfig.siteData.base,
       outDir: ssr ? serverPath(siteConfig) : siteConfig.outDir,
       cssCodeSplit: false,
       emptyOutDir: true,

@@ -1,11 +1,9 @@
-import { ComponentOptions } from 'vue'
-
-export interface SiteData {
+export interface SiteData<T = never> {
   base: string
   lang: string
   title: string
   description: string
-  themeConfig?: never
+  themeConfig?: T
   pages: string[]
 }
 
@@ -15,15 +13,4 @@ export interface PageData {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   frontmatter: Record<string, any>
   lastUpdated: number
-}
-
-export interface Header {
-  level: number
-  title: string
-  slug: string
-}
-
-export interface Theme {
-  Layout: ComponentOptions
-  NotFound: ComponentOptions
 }

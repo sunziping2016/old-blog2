@@ -14,11 +14,12 @@ export interface UserConfig {
   title?: string
   description?: string
   plugins?: UserConfigPlugins
-  theme?: Record<string, string>
+  theme?: string
   themeConfig?: never
 }
 
 export interface SiteConfig {
+  isProd: boolean
   root: string
   userConfig: UserConfig
   siteData: SiteData
@@ -51,6 +52,7 @@ export async function resolveSiteConfig(root: string): Promise<SiteConfig> {
     ignore: ['node_modules']
   })
   return {
+    isProd: process.env.NODE_ENV === 'production',
     root,
     userConfig,
     siteData: {

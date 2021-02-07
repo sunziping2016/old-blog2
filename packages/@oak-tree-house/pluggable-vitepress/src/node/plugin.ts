@@ -3,6 +3,7 @@ import MarkdownIt from 'markdown-it'
 import { SiteConfig, UserConfigPlugins } from './config'
 import path from 'path'
 import { RenderContext } from './render'
+import { ThemeApi } from './theme'
 
 export interface VitepressPluginOption extends VitePlugin {
   configMarkdown?: (config: MarkdownIt.Options) => MarkdownIt.Options
@@ -13,8 +14,7 @@ export interface VitepressPluginOption extends VitePlugin {
 }
 
 export interface VitepressPluginContext extends SiteConfig {
-  isProd: boolean
-  sourceDir: string
+  theme: ThemeApi
 }
 
 export type AsyncVitepressPlugin<Options> = (

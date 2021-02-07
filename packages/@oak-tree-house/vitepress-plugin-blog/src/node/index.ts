@@ -291,7 +291,7 @@ const plugin: BlogPlugin = async (options, context) => {
     }
   }
   async function loadMarkdownFile(file: string): Promise<MarkdownFile> {
-    const full_path = path.join(context.sourceDir, file)
+    const full_path = path.join(context.root, file)
     const src = await readModifiedFile(full_path)
     const { content, data: frontmatter } = matter(src)
     return {
@@ -311,7 +311,7 @@ const plugin: BlogPlugin = async (options, context) => {
     return data
   }
   const markdownFiles = await globby(['**.md'], {
-    cwd: context.sourceDir,
+    cwd: context.root,
     ignore: ['node_modules']
   })
   for (const markdownFile of markdownFiles) {
@@ -403,7 +403,7 @@ const plugin: BlogPlugin = async (options, context) => {
         if (!file.endsWith('.md')) {
           return
         }
-        updateFile(path.relative(context.sourceDir, file)).catch((err) =>
+        updateFile(path.relative(context.root, file)).catch((err) =>
           console.error(err)
         )
       })
@@ -411,7 +411,7 @@ const plugin: BlogPlugin = async (options, context) => {
         if (!file.endsWith('.md')) {
           return
         }
-        updateFile(path.relative(context.sourceDir, file)).catch((err) =>
+        updateFile(path.relative(context.root, file)).catch((err) =>
           console.error(err)
         )
       })
@@ -419,7 +419,7 @@ const plugin: BlogPlugin = async (options, context) => {
         if (!file.endsWith('.md')) {
           return
         }
-        removeFile(path.relative(context.sourceDir, file))
+        removeFile(path.relative(context.root, file))
       })
     },
     resolveId(id) {
@@ -444,16 +444,10 @@ const plugin: BlogPlugin = async (options, context) => {
       } else {
         const m2 = id.match(THEME_RE)
         if (m2) {
-          let component: string = path.resolve(
-            __dirname,
-            '../client',
-            m2[1] + '.vue'
-          )
-          const theme = context.userConfig.theme
-          if (theme && theme[m2[1]] !== undefined) {
-            component = theme[m2[1]]
-          }
-          return `export { default } from "/@fs/${component}"\n`
+          const view =
+            context.theme.queryView(m2[1]) ||
+            path.resolve(__dirname, '../client', m2[1] + '.vue')
+          return `export { default } from "/@fs/${view}"\n`
         }
       }
     },

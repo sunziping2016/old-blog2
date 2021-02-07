@@ -4,32 +4,37 @@
   "description": "My next generation personal blog powered by Vue 3 and VitePress",
   "private": true,
   "workspaces": [
-    "packages/@oak-tree-house/*"
+    "packages/@oak-tree-house/*",
+    "site"
   ],
   "scripts": {
     "watch": "nodemon",
     "lint": "eslint \"packages/@oak-tree-house/{pluggable-vitepress,vitepress-plugin-blog,vitepress-plugin-mathjax}/{scripts,src}/**/*.{js,ts,vue}\"",
     "format:js": "prettier --check --write \"packages/@oak-tree-house/pluggable-vitepress/scripts/**/*.js\"",
     "format:ts": "prettier --check --write --parser typescript \"packages/@oak-tree-house/pluggable-vitepress/src/**/*.ts\"",
-    "build": "yarn run build:vitepress && yarn run build:plugin-blog && yarn run build:plugin-mathjax",
+    "build": "yarn run build:vitepress && run-p build:plugin-blog build:plugin-mathjax build:theme-vue",
     "build:vitepress": "cd packages/@oak-tree-house/pluggable-vitepress && yarn run build",
     "build:plugin-blog": "cd packages/@oak-tree-house/vitepress-plugin-blog && yarn run build",
     "build:plugin-mathjax": "cd packages/@oak-tree-house/vitepress-plugin-mathjax && yarn run build",
+    "build:theme-vue": "cd packages/@oak-tree-house/vitepress-theme-vue && yarn run build",
     "build:site": "pluggable-vitepress build --root site",
     "start": "pluggable-vitepress dev --root site",
     "postinstall": "lerna link && husky install"
   },
   "devDependencies": {
+    "@types/es-module-lexer": "^0.3.0",
     "@typescript-eslint/eslint-plugin": "^4.12.0",
     "@typescript-eslint/parser": "^4.12.0",
     "@vue/eslint-config-prettier": "^6.0.0",
     "@vue/eslint-config-typescript": "^7.0.0",
+    "es-module-lexer": "^0.3.26",
     "eslint": "^7.17.0",
     "eslint-plugin-prettier": "^3.3.1",
     "eslint-plugin-vue": "^7.4.1",
     "husky": "^5.0.6",
     "lerna": "^3.22.1",
     "nodemon": "^2.0.7",
+    "npm-run-all": "^4.1.5",
     "prettier": "^2.2.1"
   }
 }

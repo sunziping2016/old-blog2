@@ -8,7 +8,7 @@ import {
 } from 'vue'
 import { siteData } from './siteData'
 import createRouter from './router'
-import { Content } from './mixin'
+import { Content } from './page'
 import enhanceApps from '@enhanceApps'
 import GlobalLayout from '@theme/GlobalLayout'
 import { inBrowser } from './utils'
@@ -42,7 +42,7 @@ export function createApp(): Promise<{ app: App; router: Router }> {
 if (inBrowser) {
   createApp().then(({ app, router }) => {
     router.isReady().then(() => {
-      app.mount('#app', true)
+      app.mount('#app')
     })
   })
 }

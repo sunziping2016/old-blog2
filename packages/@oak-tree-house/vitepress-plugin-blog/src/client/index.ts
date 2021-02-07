@@ -1,5 +1,6 @@
 import { computed, ref, Ref, ComputedRef, ComponentOptions, watch } from 'vue'
-import { BlogDataItem } from '@types'
+// noinspection ES6PreferShortImport
+import { BlogDataItem } from '../shared/types'
 import { PageData } from '@oak-tree-house/pluggable-vitepress/dist/client/index'
 import { NavigationFailure, useRouter } from 'vue-router'
 import initialBlogData from '@blogData'
@@ -105,7 +106,7 @@ export function useIndexPost(
   const pages = ref<
     Array<{
       excerpt: ComponentOptions
-      pageData: PageData
+      pageData: Ref<PageData>
     }>
   >([])
   const pagesLoading = ref<boolean>(false)

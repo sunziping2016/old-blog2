@@ -13,7 +13,18 @@ import NotFound from '@theme/NotFound'
 export default function createRouter(base: string): Router {
   const router = baseCreateRouter({
     history: inBrowser ? createWebHistory(base) : createMemoryHistory(base),
-    routes: []
+    routes: [],
+    scrollBehavior(to, from, savedPosition) {
+      if (savedPosition) {
+        return savedPosition
+      } else if (to.hash) {
+        return {
+          el: decodeURIComponent(to.hash)
+        }
+      } else {
+        return { left: 0, top: 0 }
+      }
+    }
   })
 
   router.addRoute({

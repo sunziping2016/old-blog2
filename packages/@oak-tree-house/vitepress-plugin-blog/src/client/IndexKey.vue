@@ -13,20 +13,15 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, toRefs } from 'vue'
+<script setup lang="ts">
+import { defineProps, toRefs } from 'vue'
 import { useIndexKey } from './index'
 
-export default defineComponent({
-  props: {
-    blogId: {
-      type: String,
-      required: true
-    }
-  },
-  setup(props: { blogId: string }) {
-    const { blogId } = toRefs(props)
-    return useIndexKey(blogId)
-  }
-})
+const props = defineProps<{
+  blogId: string
+}>()
+
+const { blogId } = toRefs(props)
+
+const { classifier } = useIndexKey(blogId)
 </script>
