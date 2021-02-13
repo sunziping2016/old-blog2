@@ -1,8 +1,8 @@
 import { computed, Ref } from 'vue'
 import type { Config, NavItemWithChildren } from '../config'
 import { useRoute } from 'vue-router'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
-import { inBrowser } from '@oak-tree-house/pluggable-vitepress/dist/client/app/utils'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
+import { inBrowser } from '@oak-tree-house/vitepress/dist/client/app/utils'
 
 export function useLocaleLinks(): Ref<NavItemWithChildren | null> {
   const route = useRoute()

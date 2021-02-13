@@ -7,8 +7,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
-import { usePageData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/pageData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
+import { usePageData } from '@oak-tree-house/vitepress/dist/client/app/pageData'
 import type { Config } from '../config'
 
 const { themeConfig } = useSiteData<Config>()

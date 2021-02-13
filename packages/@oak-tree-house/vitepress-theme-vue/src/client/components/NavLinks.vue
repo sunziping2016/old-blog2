@@ -23,7 +23,7 @@ import { useLocaleLinks } from '../composables/nav'
 import { useRepo } from '../composables/repo'
 import NavLink from './NavLink.vue'
 import NavDropdownLink from './NavDropdownLink.vue'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 import type { Config } from '../config'
 
 const { themeConfig } = useSiteData<Config>()

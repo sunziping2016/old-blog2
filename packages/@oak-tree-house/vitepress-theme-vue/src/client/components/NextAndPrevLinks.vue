@@ -21,7 +21,7 @@
 import { useNextAndPrevLinks } from '../composables/nextAndPrevLinks'
 import ArrowLeft from './icons/ArrowLeft.vue'
 import ArrowRight from './icons/ArrowRight.vue'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 import type { Config } from '../config'
 
 const { withBase } = useSiteData<Config>()

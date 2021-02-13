@@ -9,11 +9,11 @@ import {
 } from 'vue'
 import { joinUrl, isActive } from '../utils'
 import { useRoute } from 'vue-router'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 import {
   useHeaders,
   HeaderWithChildren
-} from '@oak-tree-house/pluggable-vitepress/dist/client/app/page'
+} from '@oak-tree-house/vitepress/dist/client/app/page'
 import type { Config, SideBarItem } from '../config'
 
 const SideBarLink = defineComponent({

@@ -4,7 +4,7 @@ import {
   renderPage,
   readModifiedFile,
   debounce
-} from '@oak-tree-house/pluggable-vitepress'
+} from '@oak-tree-house/vitepress'
 import dayjs from 'dayjs'
 import globby from 'globby'
 import path from 'path'

@@ -1,7 +1,7 @@
 import { computed, Ref } from 'vue'
 import { endingSlashRE, isNullish, isExternal } from '../utils'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
-import { usePageData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/pageData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
+import { usePageData } from '@oak-tree-house/vitepress/dist/client/app/pageData'
 import { Config } from '../config'
 
 const bitbucketRE = /bitbucket.org/

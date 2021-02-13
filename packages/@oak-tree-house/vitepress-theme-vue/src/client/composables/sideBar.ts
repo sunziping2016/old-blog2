@@ -1,15 +1,19 @@
 import { computed, Ref } from 'vue'
 import { getSideBarConfig } from '../support/sideBar'
 import { Config, SideBarItem } from '../config'
-import { usePageData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/pageData'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { usePageData } from '@oak-tree-house/vitepress/dist/client/app/pageData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 import { joinUrl, removeExtension } from '../utils'
 import { useRoute } from 'vue-router'
+import { useActiveSidebarLinks } from './activeSidebarLink'
 
 export function useSideBar(): Ref<Array<SideBarItem>> {
   const { pageData, frontmatter } = usePageData()
   const { siteData, themeConfig } = useSiteData<Config>()
   const route = useRoute()
+
+  useActiveSidebarLinks()
+
   return computed(() => {
     // at first, we'll check if we can find the sidebar setting in frontmatter.
     const frontSidebar = frontmatter.value && frontmatter.value.sidebar

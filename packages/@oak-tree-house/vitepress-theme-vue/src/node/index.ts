@@ -1,4 +1,4 @@
-import { VitepressTheme } from '@oak-tree-house/pluggable-vitepress'
+import { VitepressTheme } from '@oak-tree-house/vitepress'
 import path from 'path'
 
 interface ThemeVueOptions {

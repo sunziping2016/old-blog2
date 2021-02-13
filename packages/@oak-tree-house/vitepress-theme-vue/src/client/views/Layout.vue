@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import PageFooter from '../components/PageFooter.vue'
 import NextAndPrevLinks from '../components/NextAndPrevLinks.vue'
-import { usePage } from '@oak-tree-house/pluggable-vitepress/dist/client/app/page'
+import { usePage } from '@oak-tree-house/vitepress/dist/client/app/page'
 
 const { pageLoading } = usePage()
 </script>

@@ -25,7 +25,7 @@
   "dependencies": {
     "@docsearch/css": "^1.0.0-alpha.28",
     "@docsearch/js": "^1.0.0-alpha.28",
-    "@oak-tree-house/pluggable-vitepress": "^0.1.0",
+    "@oak-tree-house/vitepress": "^0.1.0",
     "fs-extra": "^9.1.0"
   }
 }

@@ -1,10 +1,10 @@
 import { computed, ref, Ref, ComputedRef, ComponentOptions, watch } from 'vue'
 // noinspection ES6PreferShortImport
 import { BlogDataItem } from '../shared/types'
-import { PageData } from '@oak-tree-house/pluggable-vitepress/dist/client/index'
+import { PageData } from '@oak-tree-house/vitepress/dist/client/index'
 import { NavigationFailure, useRouter } from 'vue-router'
 import initialBlogData from '@blogData'
-import { inBrowser } from '@oak-tree-house/pluggable-vitepress/dist/client/app/utils'
+import { inBrowser } from '@oak-tree-house/vitepress/dist/client/app/utils'
 
 export const blogData = ref(initialBlogData)
 

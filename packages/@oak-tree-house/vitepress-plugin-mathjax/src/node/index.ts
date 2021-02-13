@@ -1,7 +1,7 @@
 import {
   VitepressPlugin,
   MarkdownEnv
-} from '@oak-tree-house/pluggable-vitepress'
+} from '@oak-tree-house/vitepress'
 import { createCanvas } from 'canvas'
 import StateInline from 'markdown-it/lib/rules_inline/state_inline'
 import StateBlock from 'markdown-it/lib/rules_block/state_block'

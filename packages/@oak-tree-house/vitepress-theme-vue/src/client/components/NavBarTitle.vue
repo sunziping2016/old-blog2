@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 import type { Config } from '../config'
 
 const { siteData, themeConfig, withBase } = useSiteData<Config>()

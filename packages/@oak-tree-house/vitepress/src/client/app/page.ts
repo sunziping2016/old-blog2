@@ -5,7 +5,8 @@ import {
   h,
   Ref,
   ref,
-  watch
+  watch,
+  nextTick
 } from 'vue'
 import { inBrowser } from './utils'
 import { useRoute } from 'vue-router'
@@ -74,12 +75,14 @@ export const Content = defineComponent({
                 (data) => {
                   setTimeout(() => {
                     pageLoading.value = false
+                    if (location.hash) {
+                      const oldHash = location.hash
+                      location.hash = ''
+                      setTimeout(() => {
+                        location.hash = oldHash
+                      })
+                    }
                   })
-                  if (location.hash) {
-                    const oldHash = location.hash
-                    location.hash = ''
-                    setTimeout(() => (location.hash = oldHash))
-                  }
                   return data
                 }
               )

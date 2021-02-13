@@ -2,7 +2,7 @@ import { computed, Ref } from 'vue'
 import { useRoute } from 'vue-router'
 import type { Config, NavItemWithLink } from '../config'
 import { isExternal as isExternalCheck } from '../utils'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 
 export function useNavLink(
   item: NavItemWithLink

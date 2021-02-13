@@ -1,6 +1,6 @@
 import { computed, Ref } from 'vue'
 import type { Config } from '../config'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 
 export const platforms = ['GitHub', 'GitLab', 'Bitbucket'].map((platform) => {
   return [platform, new RegExp(platform, 'i')] as const

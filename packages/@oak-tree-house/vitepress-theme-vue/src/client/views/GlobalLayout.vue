@@ -4,7 +4,7 @@
       <template #search>
         <slot name="navbar-search">
           <AlgoliaSearchBox
-            v-if="themeConfig.algolia"
+            v-if="themeConfig && themeConfig.algolia"
             :options="themeConfig.algolia"
           />
         </slot>
@@ -17,8 +17,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, defineAsyncComponent } from 'vue'
-import { usePageData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/pageData'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { usePageData } from '@oak-tree-house/vitepress/dist/client/app/pageData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 import type { Config } from '../config'
 import { useRoute } from 'vue-router'
 

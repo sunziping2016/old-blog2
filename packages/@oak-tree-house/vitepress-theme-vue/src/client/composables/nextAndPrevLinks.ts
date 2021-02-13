@@ -1,9 +1,9 @@
 import { computed, Ref } from 'vue'
 import { isArray, ensureStartingSlash, removeExtension } from '../utils'
 import { getSideBarConfig, getFlatSideBarLinks } from '../support/sideBar'
-import { useSiteData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/siteData'
+import { useSiteData } from '@oak-tree-house/vitepress/dist/client/app/siteData'
 import { Config, SideBarLink } from '../config'
-import { usePageData } from '@oak-tree-house/pluggable-vitepress/dist/client/app/pageData'
+import { usePageData } from '@oak-tree-house/vitepress/dist/client/app/pageData'
 
 export function useNextAndPrevLinks(): {
   next: Ref<SideBarLink | undefined>

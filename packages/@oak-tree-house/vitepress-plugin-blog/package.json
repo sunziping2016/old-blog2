@@ -19,7 +19,7 @@
     "url": "https://github.com/sunziping2016/oak-tree-house-next/issues"
   },
   "dependencies": {
-    "@oak-tree-house/pluggable-vitepress": "^0.1.0",
+    "@oak-tree-house/vitepress": "^0.1.0",
     "dayjs": "^1.10.3",
     "fs-extra": "^9.0.1",
     "globby": "^11.0.2",
