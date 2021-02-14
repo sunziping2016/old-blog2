@@ -24,6 +24,7 @@ function newApp(): App {
   return import.meta.env.PROD ? createSSRApp(app) : createClientApp(app)
 }
 
+// avoid uncaught ReferenceError: process is not defined
 void import.meta.hot
 
 export function createApp(): Promise<{ app: App; router: Router }> {

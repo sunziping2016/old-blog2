@@ -5,8 +5,7 @@ import {
   h,
   Ref,
   ref,
-  watch,
-  nextTick
+  watch
 } from 'vue'
 import { inBrowser } from './utils'
 import { useRoute } from 'vue-router'

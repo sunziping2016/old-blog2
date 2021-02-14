@@ -14,6 +14,7 @@ import { build } from './build'
 import slash from 'slash'
 import { renderPages } from './render'
 import { ThemeApi, VitepressThemeContext } from './theme'
+import { highlight } from './markdown/highlight'
 
 const argv: minimist.ParsedArgs = minimist(process.argv.slice(2))
 
@@ -44,7 +45,8 @@ async function main(): Promise<void> {
   const md = MarkdownIt(
     pluginApi.applyConfigMarkdown({
       html: true,
-      linkify: true
+      linkify: true,
+      highlight
     })
   )
   pluginApi.extendMarkdown(md)

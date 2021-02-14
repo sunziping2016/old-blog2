@@ -5,10 +5,18 @@ import matter from 'gray-matter'
 import slash from 'slash'
 import fs from 'fs-extra'
 import path from 'path'
+import emoji from 'markdown-it-emoji'
 import anchor from 'markdown-it-anchor'
-import { deeplyParseHeader } from '../parseHeader'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import toc from 'markdown-it-table-of-contents'
+import { deeplyParseHeader, parseHeader } from './parseHeader'
 import { hoistPlugin } from './hoist'
 import { slugify } from './slugify'
+import { highlightLinePlugin } from './highlightLines'
+import { preWrapperPlugin } from './preWrapper'
+import { snippetPlugin } from './snippet'
+import { containerPlugin } from './containers'
 
 export interface MarkdownParsedData {
   hoistedTags?: string[]
@@ -31,60 +39,23 @@ export interface MarkdownItWithData extends MarkdownIt {
 
 export function createMarkdownRender(md: MarkdownIt): MarkdownRenderer {
   md.use(componentPlugin)
+    .use(highlightLinePlugin)
+    .use(preWrapperPlugin)
+    .use(snippetPlugin)
     .use(hoistPlugin)
+    .use(containerPlugin)
+    .use(emoji)
     .use(anchor, {
       slugify,
       permalink: true,
       permalinkBefore: true,
       permalinkSymbol: '#',
       permalinkAttrs: () => ({ 'aria-hidden': true })
-      // renderPermalink: (
-      //   slug: string,
-      //   opts: {
-      //     permalinkClass: string
-      //     permalinkSpace: boolean
-      //     permalinkSymbol: string
-      //     permalinkBefore: boolean
-      //     permalinkHref(slug: string): string
-      //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      //     permalinkAttrs(slug: string): Record<string, any>
-      //   },
-      //   state: StateCore,
-      //   idx: number
-      // ): void => {
-      //   const space = () =>
-      //     Object.assign(new state.Token('text', '', 0), { content: ' ' })
-      //
-      //   const linkTokens = [
-      //     Object.assign(new state.Token('link_open', 'router-link', 1), {
-      //       attrs: [
-      //         ...(opts.permalinkClass ? [['class', opts.permalinkClass]] : []),
-      //         ['to', opts.permalinkHref(slug)],
-      //         ...Object.entries(opts.permalinkAttrs(slug))
-      //       ]
-      //     }),
-      //     Object.assign(new state.Token('html_block', '', 0), {
-      //       content: opts.permalinkSymbol
-      //     }),
-      //     new state.Token('link_close', 'router-link', -1)
-      //   ]
-      //   // `push` or `unshift` according to position option.
-      //   // Space is at the opposite side.
-      //   if (opts.permalinkSpace) {
-      //     if (opts.permalinkBefore) {
-      //       linkTokens.push(space())
-      //     } else {
-      //       linkTokens.unshift(space())
-      //     }
-      //   }
-      //   const token = state.tokens[idx + 1]
-      //   token.children = token.children || []
-      //   if (opts.permalinkBefore) {
-      //     token.children.unshift(...linkTokens)
-      //   } else {
-      //     token.children.push(...linkTokens)
-      //   }
-      // }
+    })
+    .use(toc, {
+      slugify,
+      includeLevel: [2, 3],
+      format: parseHeader
     })
   const render = md.render
   return (src, env) => {
