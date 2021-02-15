@@ -45,6 +45,10 @@ export class PluginApi {
     return this.plugins
   }
 
+  addPlugin(plugin: VitepressPluginOption): void {
+    this.plugins.push(plugin)
+  }
+
   static async loadPlugins(
     userConfigPlugins: UserConfigPlugins,
     context: VitepressPluginContext,

@@ -1,3 +1,5 @@
+const path = require('path')
+
 module.exports = {
   lang: 'zh',
   title: '橡树屋',
@@ -14,26 +16,7 @@ module.exports = {
         ]
       }
     ],
-    sidebar: {
-      '/': [
-        {
-          text: '编程',
-          children: [
-            { text: 'GraphQL学习笔记', link: '/_posts/2020-06-28-graphql-learning-notes' },
-            { text: 'C++模板（未完待续）', link: '/_posts/2020-07-03-cpp-templates' },
-            { text: 'TypeScipt学习笔记（未完待续）', link: '/_posts/2019-09-12-typescript-learning-notes' }
-          ]
-        },
-        {
-          text: '数学',
-          children: [
-            { text: '微积分复习笔记（上）', link: '/_posts/2018-11-01-calculus-notes1' },
-            { text: '线性代数复习笔记（上）', link: '/_posts/2018-10-23-linear-algebra-notes1' }
-          ]
-        }
-      ]
-    },
-    // sidebar: 'auto',
+    sidebar: 'auto',
     algolia: {
       apiKey: '5eac05703da4f5923e426c2e44baa411',
       indexName: 'szp'
@@ -65,5 +48,6 @@ module.exports = {
       ],
     }],
     ['@oak-tree-house/vitepress-plugin-mathjax']
-  ]
+  ],
+  enhanceAppFile: path.resolve(__dirname, 'enhanceApp.js')
 }

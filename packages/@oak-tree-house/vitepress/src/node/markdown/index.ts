@@ -173,8 +173,8 @@ export class MarkdownCachedLoader {
   ): Promise<string> {
     const item = await this.ensureMarkdownItem(filename, code, root)
     return (
-      `<template><div>${item.contentHtml}</div></template>\n` +
-      (item.hoistedTags || []).join('\n')
+      (item.hoistedTags || []).join('\n') +
+      `\n<template><div>${item.contentHtml}</div></template>`
     )
   }
 }

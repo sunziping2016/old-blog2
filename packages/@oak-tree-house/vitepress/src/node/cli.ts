@@ -41,6 +41,7 @@ async function main(): Promise<void> {
     pluginContext,
     resolvePath(root, '.')
   )
+  pluginApi.addPlugin(siteConfig.userConfig)
   // Markdown
   const md = MarkdownIt(
     pluginApi.applyConfigMarkdown({

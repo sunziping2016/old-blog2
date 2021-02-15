@@ -1,57 +1,93 @@
 import originCreateVuePlugin, { Options } from '@vitejs/plugin-vue'
 import qs from 'querystring'
+import { SourceMapInput } from 'rollup'
 import { Plugin } from 'vite'
 
 function transformId(
   id: string
 ): {
-  filename: string
   newId: string
   pageData?: true
-  content?: true
-  excerpt?: true
+  tag?: 'excerpt' | 'content'
 } {
   const [filename, rawQuery] = id.split(`?`, 2)
   const query = qs.parse(rawQuery || '')
   if (filename.endsWith('.md')) {
     if (query.pageData !== undefined) {
-      return { filename, newId: id, pageData: true }
+      return { newId: id, pageData: true }
     } else if (query.excerpt !== undefined) {
       const newFilename = filename.slice(0, -3) + '.excerpt.md'
       return {
-        filename: newFilename,
         newId: newFilename + '?' + rawQuery,
-        excerpt: true
+        tag: 'excerpt'
       }
     } else if (query.content !== undefined) {
       const newFilename = filename.slice(0, -3) + '.content.md'
       return {
-        filename: newFilename,
         newId: newFilename + '?' + rawQuery,
-        content: true
+        tag: 'content'
       }
     }
   }
-  return { filename, newId: id }
+  return { newId: id }
+}
+
+function mapSourceMap(map?: SourceMapInput): void {
+  if (typeof map === 'object' && map !== null) {
+    if ('file' in map && map.file) {
+      map.file = map.file.replace(/\.(?:content|excerpt)\.md$/, '.md')
+    }
+    if ('sources' in map) {
+      map.sources = map.sources.map((file) =>
+        file.replace(/\.(?:content|excerpt)\.md$/, '.md')
+      )
+    }
+  }
 }
 
 export default function createVuePlugin(options: Options): Plugin {
   const vuePlugin = originCreateVuePlugin(options)
   const originVuePluginLoad = vuePlugin.load
   if (originVuePluginLoad !== undefined) {
-    vuePlugin.load = async function (id) {
-      const { newId, pageData } = transformId(id)
+    vuePlugin.load = async function (id, ssr) {
+      const { newId, pageData, tag } = transformId(id)
       if (!pageData) {
-        return await originVuePluginLoad.call(this, newId)
+        const replaceTag = tag === undefined ? '.md?' : `.md?${tag}&`
+        let result = await originVuePluginLoad.call(this, newId, ssr)
+        // noinspection SuspiciousTypeOfGuard
+        if (typeof result === 'string') {
+          result = result.replace(/\.(?:content|excerpt)\.md\?/g, replaceTag)
+        } else if (typeof result === 'object' && result !== null) {
+          result.code = result.code.replace(
+            /\.(?:content|excerpt)\.md\?/g,
+            replaceTag
+          )
+          mapSourceMap(result.map)
+        }
+        return result
       }
     }
   }
   const originVuePluginTransform = vuePlugin.transform
   if (originVuePluginTransform !== undefined) {
-    vuePlugin.transform = async function (code, id) {
-      const { newId, pageData } = transformId(id)
+    vuePlugin.transform = async function (code, id, ssr) {
+      const { newId, pageData, tag } = transformId(id)
       if (!pageData) {
-        return await originVuePluginTransform.call(this, code, newId)
+        const replaceTag = tag === undefined ? '.md?' : `.md?${tag}&`
+        let result = await originVuePluginTransform.call(this, code, newId, ssr)
+        // noinspection SuspiciousTypeOfGuard
+        if (typeof result === 'string') {
+          result = result.replace(/\.(?:content|excerpt)\.md\?/g, replaceTag)
+        } else if (typeof result === 'object' && result !== null) {
+          if (result.code !== undefined) {
+            result.code = result.code.replace(
+              /\.(?:content|excerpt)\.md\?/g,
+              replaceTag
+            )
+          }
+          mapSourceMap(result.map)
+        }
+        return result
       }
     }
   }

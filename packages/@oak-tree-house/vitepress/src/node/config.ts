@@ -3,12 +3,13 @@ import fs from 'fs-extra'
 import chalk from 'chalk'
 import { SiteData } from '../shared/types'
 import globby from 'globby'
+import { VitepressPluginOption } from './plugin'
 
 export type UserConfigPlugins =
   | { [name: string]: never }
   | Array<[string, never] | string>
 
-export interface UserConfig {
+export interface UserConfig extends VitepressPluginOption {
   base?: string
   lang?: string
   title?: string
