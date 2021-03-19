@@ -1,0 +1,39 @@
+import { VitepressPlugin } from '../plugin'
+import { ViteDevServer } from 'vite'
+import path from 'path'
+
+export const APP_PATH = path.join(__dirname, '../../client/app')
+
+export const HTML_TEMPLATE = `\
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title></title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/@fs/${APP_PATH}/index.js"></script>
+  </body>
+</html>
+`
+
+const indexHtmlPlugin: VitepressPlugin<never> = {
+  name: '@internal/index-html',
+  configureServer(server: ViteDevServer) {
+    return () => {
+      server.middlewares.use((req, res, next) => {
+        if (req.url && req.url.endsWith('.html')) {
+          res.statusCode = 200
+          res.end(HTML_TEMPLATE)
+          return
+        }
+        next()
+      })
+    }
+  }
+}
+
+export default indexHtmlPlugin

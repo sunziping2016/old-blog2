@@ -1,11 +1,11 @@
 {
   "private": true,
-  "name": "@oak-tree-house/site",
+  "name": "@tillycode/site",
   "version": "0.1.0",
   "devDependencies": {
-    "@oak-tree-house/vitepress": "^0.1.0",
-    "@oak-tree-house/vitepress-plugin-blog": "^0.1.0",
-    "@oak-tree-house/vitepress-plugin-mathjax": "^0.1.0",
-    "@oak-tree-house/vitepress-theme-vue": "^0.1.0"
+    "@tillycode/vitepress": "^0.1.0",
+    "@tillycode/vitepress-plugin-blog": "^0.1.0",
+    "@tillycode/vitepress-plugin-mathjax": "^0.1.0",
+    "@tillycode/vitepress-theme-vue": "^0.1.0"
   }
 }
