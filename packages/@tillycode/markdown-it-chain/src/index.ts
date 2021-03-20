@@ -1,5 +1,7 @@
 import MarkdownIt, { Options } from 'markdown-it'
 import ChainedMap, { TypedChainedMap } from './ChainedMap'
+import winston from 'winston'
+import chalk from 'chalk'
 
 // noinspection JSUnusedGlobalSymbols
 export class OptionsChain extends ChainedMap<MarkdownChain> {
@@ -131,11 +133,15 @@ export class MarkdownChain {
       plugin: MarkdownItPlugin
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       args: any[]
+      name: string
     }>
   } {
     return {
-      options: this.options.entries(),
-      plugins: this.plugins.values().map((plugin) => plugin.toConfig())
+      options: this.options.entriesMap(),
+      plugins: this.plugins.entries().map(([name, plugin]) => ({
+        ...plugin.toConfig(),
+        name
+      }))
     }
   }
 
@@ -165,9 +171,10 @@ export class MarkdownChain {
     const md = markdownItResolved(
       Object.assign(instantiationOptions || {}, options || {})
     )
-    for (const { plugin, args } of plugins) {
+    for (const { plugin, args, name } of plugins) {
+      winston.info(`use markdown plugin ${chalk.green(name)}`)
       md.use(plugin, ...args)
     }
-    return plugins.reduce((md, { plugin, args }) => md.use(plugin, ...args), md)
+    return md
   }
 }

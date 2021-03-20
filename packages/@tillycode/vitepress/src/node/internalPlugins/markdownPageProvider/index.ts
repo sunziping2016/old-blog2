@@ -15,7 +15,7 @@ import matter from 'gray-matter'
 import { RouterSettings } from '../../../shared/types'
 import { deeplyParseHeader } from './parseHeader'
 import fs from 'fs-extra'
-import { MarkdownEnv, MarkdownItWithData } from '../markdownRender'
+import { MarkdownEnv, MarkdownItWithData } from '../markdownPlugins'
 import slash from 'slash'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types
@@ -156,7 +156,7 @@ export class MarkdownPage extends Page {
       const env = this.makeEnv(basic)
       const md = this.md as MarkdownItWithData
       md.__data = {}
-      const contentHtml = md.render(basic.excerpt, env)
+      const contentHtml = md.render(basic.content, env)
       this.content = {
         contentHtml,
         hoistedTags: md.__data.hoistedTags || []
@@ -165,7 +165,7 @@ export class MarkdownPage extends Page {
     return this.content
   }
 
-  protected async reload(): Promise<RouterSettings> {
+  protected async load(): Promise<RouterSettings> {
     const basic = await this.ensureBasic()
     return {
       routerPath: this.page.path,
@@ -174,13 +174,13 @@ export class MarkdownPage extends Page {
   }
 }
 
-export default async function markdownPagesPlugin(
+export default async function markdownPageProviderPlugin(
   this: PluginApi,
   pluginOptions: undefined,
   context: VitepressPluginContext
 ): Promise<VitepressPluginOption> {
   return {
-    name: '@internal/markdown-pages',
+    name: '@internal/markdown-page-provider',
     configureServer: async (server) => {
       const pages: AdditionalPage[] = []
       const pagePathSet: Set<string> = new Set<string>() // ensure uniqueness
@@ -245,16 +245,18 @@ export default async function markdownPagesPlugin(
         }
         pages.push(item)
       })
+      const filePath2Id: Record<string, string> = {}
       // Add file to pages and setup watcher
       for (const page of pages) {
         const id = generatePageId(page.path)
         await this.pageApi.add(new MarkdownPage(id, context, this.md, page))
         if ('filePath' in page) {
+          filePath2Id[page.filePath] = id
           server.watcher.add(page.filePath)
         }
       }
       server.watcher.on('add', (filePath) => {
-        if (filePath.endsWith('.md') && !pageFilePathSet.has(filePath)) {
+        if (filePath.endsWith('.md') && filePath2Id[filePath] === undefined) {
           const relativePath = path.relative(context.sourceDir, filePath)
           const routerPath = relativePathToRouterPath(relativePath)
           const id = generatePageId(routerPath)
@@ -265,7 +267,7 @@ export default async function markdownPagesPlugin(
             return
           }
           pagePathSet.add(routerPath)
-          pageFilePathSet.add(filePath)
+          filePath2Id[filePath] = id
           this.pageApi
             .add(
               new MarkdownPage(id, context, this.md, {
@@ -277,10 +279,8 @@ export default async function markdownPagesPlugin(
         }
       })
       server.watcher.on('unlink', (filePath) => {
-        if (filePath.endsWith('.md') && pageFilePathSet.has(filePath)) {
-          const relativePath = path.relative(context.sourceDir, filePath)
-          const routerPath = relativePathToRouterPath(relativePath)
-          const id = generatePageId(routerPath)
+        if (filePath.endsWith('.md') && filePath2Id[filePath] !== undefined) {
+          const id = filePath2Id[filePath]
           const markdownPage = this.pageApi.get(id) as MarkdownPage
           const page = markdownPage.page as {
             path: string
@@ -292,10 +292,8 @@ export default async function markdownPagesPlugin(
         }
       })
       server.watcher.on('change', (filePath) => {
-        if (filePath.endsWith('.md') && pageFilePathSet.has(filePath)) {
-          const relativePath = path.relative(context.sourceDir, filePath)
-          const routerPath = relativePathToRouterPath(relativePath)
-          const id = generatePageId(routerPath)
+        if (filePath.endsWith('.md') && filePath2Id[filePath] !== undefined) {
+          const id = filePath2Id[filePath]
           this.pageApi.invalidate(id).catch((e) => winston.error(e))
         }
       })

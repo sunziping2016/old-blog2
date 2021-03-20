@@ -59,5 +59,8 @@ module.exports = {
   }, {
     path: '/changelog/',
     filePath: path.resolve(__dirname, '../../CHANGELOG.md')
+  }, {
+    path: '/test/',
+    content: '# Test Success'
   }]
 }

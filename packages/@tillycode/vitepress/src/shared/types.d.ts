@@ -32,22 +32,16 @@ export interface RouterSettings {
   meta?: Record<string, any>
 }
 
-// // Retrieved on demand. Can be extended by sub-classing.
-// export interface PageData {
-//   title: string
-//   description: string
-// }
-//
-// export interface Header {
-//   level: number
-//   title: string
-//   slug: string
-// }
-//
-// export interface MarkdownPageData extends PageData {
-//   relativePath: string
-//   headers: Header[]
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//   frontmatter: Record<string, any>
-//   lastUpdated: number
-// }
+export interface Header {
+  level: number
+  title: string
+  slug: string
+}
+
+export interface MarkdownPageData {
+  title: string
+  headers: Header[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  frontmatter: Record<string, any>
+  lastUpdated?: number
+}

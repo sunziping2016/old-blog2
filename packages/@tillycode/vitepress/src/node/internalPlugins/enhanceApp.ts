@@ -10,12 +10,14 @@ export default function enhanceAppPlugin(
     name: '@internal/enhance-app',
     config() {
       return {
-        alias: [
-          {
-            find: ENHANCE_APPS_ID,
-            replacement: ENHANCE_APPS_REQUEST_PATH
-          }
-        ]
+        resolve: {
+          alias: [
+            {
+              find: ENHANCE_APPS_ID,
+              replacement: ENHANCE_APPS_REQUEST_PATH
+            }
+          ]
+        }
       }
     },
     resolveId(id) {

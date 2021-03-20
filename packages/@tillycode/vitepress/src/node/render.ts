@@ -1,7 +1,6 @@
 import { OutputAsset, OutputChunk, RollupOutput } from 'rollup'
 import { SiteConfig } from './config'
 import path from 'path'
-import { normalizePath } from 'vite'
 import fs from 'fs-extra'
 import { App } from 'vue'
 import { Router } from 'vue-router'

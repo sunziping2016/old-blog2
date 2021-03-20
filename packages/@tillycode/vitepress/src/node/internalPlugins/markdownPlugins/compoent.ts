@@ -90,6 +90,5 @@ const htmlBlock: RuleBlock = (state, startLine, endLine, silent): boolean => {
   const token = state.push('html_block', '', 0)
   token.map = [startLine, nextLine]
   token.content = state.getLines(startLine, nextLine, state.blkIndent, true)
-
   return true
 }

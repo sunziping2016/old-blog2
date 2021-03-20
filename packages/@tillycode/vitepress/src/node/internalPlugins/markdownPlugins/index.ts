@@ -5,7 +5,7 @@ import anchor from 'markdown-it-anchor'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import toc from 'markdown-it-table-of-contents'
-import { parseHeader } from '../markdownPages/parseHeader'
+import { parseHeader } from '../markdownPageProvider/parseHeader'
 import { hoistPlugin } from './hoist'
 import { slugify } from './slugify'
 import { highlightLinePlugin } from './highlightLines'
@@ -37,8 +37,8 @@ export interface MarkdownItWithData extends MarkdownIt {
   __data: MarkdownParsedData
 }
 
-const markdownRenderPlugin: VitepressPlugin<never> = {
-  name: '@internal/markdown-render',
+const markdownPluginsPlugin: VitepressPlugin<never> = {
+  name: '@internal/markdown-plugins',
   configMarkdown(config) {
     // noinspection JSUnusedGlobalSymbols
     config.options
@@ -121,7 +121,8 @@ const markdownRenderPlugin: VitepressPlugin<never> = {
           format: parseHeader
         }
       ])
+      .end()
   }
 }
 
-export default markdownRenderPlugin
+export default markdownPluginsPlugin

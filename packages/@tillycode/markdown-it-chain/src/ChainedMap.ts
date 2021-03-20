@@ -57,7 +57,7 @@ export class TypedChainedMap<Parent, Value> extends Chainable<Parent> {
     return { entries, order }
   }
 
-  entries(): Record<string, Value> | undefined {
+  entriesMap(): Record<string, Value> | undefined {
     const { entries, order } = this.order()
 
     if (order.length) {
@@ -65,6 +65,12 @@ export class TypedChainedMap<Parent, Value> extends Chainable<Parent> {
     }
 
     return undefined
+  }
+
+  entries(): Array<[string, Value]> {
+    const { entries, order } = this.order()
+
+    return order.map((name) => [name, entries[name]])
   }
 
   values(): Value[] {

@@ -6,6 +6,25 @@ declare module '*.vue' {
   export default comp
 }
 
+declare module '@md/data/*' {
+  import { Ref } from 'vue'
+  import { MarkdownPageData } from '@types'
+  const data: Ref<MarkdownPageData>
+  export default data
+}
+
+declare module '@md/excerpt/*' {
+  import { ComponentOptions } from 'vue'
+  const comp: ComponentOptions
+  export default comp
+}
+
+declare module '@md/content/*' {
+  import { ComponentOptions } from 'vue'
+  const comp: ComponentOptions
+  export default comp
+}
+
 declare module '@siteData' {
   import { SiteData } from '@types'
   const data: SiteData

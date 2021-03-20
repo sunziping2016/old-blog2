@@ -191,12 +191,12 @@ export class PluginApi {
   }
 
   async loadPlugins(userConfigPlugins: UserConfigPlugins): Promise<void> {
-    if (!Array.isArray(userConfigPlugins)) {
-      userConfigPlugins = Object.entries(userConfigPlugins)
-    }
-    for (const config of userConfigPlugins) {
+    const pluginArray = Array.isArray(userConfigPlugins)
+      ? userConfigPlugins
+      : Object.entries(userConfigPlugins)
+    for (const config of pluginArray) {
       const nameOrPlugin = Array.isArray(config) ? config[0] : config
-      const options: never = Array.isArray(config) ? config[1] : ({} as never)
+      const options = Array.isArray(config) ? config[1] : {}
       const rawPlugin: VitepressPlugin<never> =
         typeof nameOrPlugin === 'string'
           ? // eslint-disable-next-line @typescript-eslint/no-var-requires

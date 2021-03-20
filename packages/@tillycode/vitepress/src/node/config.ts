@@ -6,9 +6,11 @@ import { HeadConfig, LocaleConfig, SiteData } from '../shared/types'
 import { VitepressPlugin, VitepressPluginOption } from './plugin'
 
 export type UserConfigPlugins =
-  | { [name: string]: never }
+  // eslint-disable-next-line
+  | { [name: string]: any }
   | Array<
-      [string | VitepressPlugin<never>, never] | string | VitepressPlugin<never>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      [string | VitepressPlugin<never>, never] | string | VitepressPlugin<any>
     >
 
 export interface UserConfig extends VitepressPluginOption {

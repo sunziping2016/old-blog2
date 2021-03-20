@@ -67,8 +67,7 @@ export function convertRouterLinkPlugin(
     // Sun Ziping: customized for my vitepress
     const indexMatch = to.match(indexRE)
     if (indexMatch) {
-      const [, path, , hash] = indexMatch
-      to = path + hash
+      to = indexMatch[1] + indexMatch[3]
     }
 
     // markdown-it encodes the uri
