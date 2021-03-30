@@ -26,13 +26,13 @@ export interface VitepressPluginOption extends VitePlugin {
   plugins?: UserConfigPlugins
   before?: string
   after?: string
-  provideViews?: (views: Record<string, string>) => Record<string, string>
   configMarkdown?: (config: MarkdownChain) => void
   extendMarkdown?: (md: MarkdownIt) => void
-  enhanceAppFile?: string
   additionalPages?:
     | AdditionalPage[]
     | (() => AdditionalPage[] | Promise<AdditionalPage[]>)
+  layoutFiles?: Record<string, string | null>
+  enhanceAppFiles?: string | Record<string, string | null>
   rollupInput?: (ssr: boolean) => Record<string, string>
   renderPages?: (context: RenderContext) => Promise<void>
 }
@@ -149,13 +149,36 @@ export class PluginApi {
   }
 
   collectEnhanceAppFiles(): string[] {
-    const results: string[] = []
+    const results: Record<string, string> = {}
     for (const plugin of this.plugins) {
-      if (plugin.enhanceAppFile !== undefined) {
-        results.push(plugin.enhanceAppFile)
+      if (plugin.enhanceAppFiles !== undefined) {
+        const newEnhanceAppFiles =
+          typeof plugin.enhanceAppFiles === 'string'
+            ? { [plugin.name]: plugin.enhanceAppFiles }
+            : plugin.enhanceAppFiles
+        for (const [key, file] of Object.entries(newEnhanceAppFiles)) {
+          if (results[key] !== undefined) {
+            delete results[key]
+          }
+          if (file !== null) {
+            results[key] = file
+          }
+        }
       }
     }
-    return results
+    return Object.values(results)
+  }
+
+  queryLayout(name: string): string | null {
+    for (const plugin of this.plugins.slice().reverse()) {
+      if (
+        plugin.layoutFiles !== undefined &&
+        plugin.layoutFiles[name] !== undefined
+      ) {
+        return plugin.layoutFiles[name]
+      }
+    }
+    return null
   }
 
   async collectAdditionalPages(): Promise<AdditionalPage[]> {

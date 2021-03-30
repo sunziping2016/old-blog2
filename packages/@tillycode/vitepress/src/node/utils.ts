@@ -26,8 +26,8 @@ export async function readModifiedFile(file: string): Promise<string> {
   }
 }
 
-export function debounce<T extends never[], R>(
-  func: (...arg: T) => R,
+export function debounce<T extends never[]>(
+  func: (...arg: T) => void,
   wait: number
 ): (...arg: T) => void {
   let timeout: NodeJS.Timeout | null

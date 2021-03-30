@@ -3,15 +3,21 @@ import 'vite/dynamic-import-polyfill'
 import pageData from '@md/data/md._posts_2020-02-18-xiaomi-notebook-config'
 import excerpt from '@md/excerpt/md._posts_2020-02-18-xiaomi-notebook-config'
 import content from '@md/content/md._posts_2020-02-18-xiaomi-notebook-config'
-import { App, createApp as createClientApp, createSSRApp, h } from 'vue'
+import { App, createApp as createClientApp, createSSRApp, h, watch } from 'vue'
 // import { siteData } from './siteData'
 // import createRouter from './router'
 // import { Content } from './page'
 // import enhanceApps from '@enhanceApps'
 // import GlobalLayout from '@theme/GlobalLayout'
 import { inBrowser } from './utils'
+import routerData from '@routerData'
 // import { Router } from 'vue-router'
 //
+
+watch(routerData, () => console.log(routerData.value), {
+  deep: true
+})
+
 function newApp(): App {
   const app = {
     name: 'OakApp',

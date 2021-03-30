@@ -74,8 +74,6 @@ export class PluginChain extends ChainedMap<MarkdownChain> {
   }
 
   constructor(parent: MarkdownChain) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     super(parent)
   }
 
@@ -98,8 +96,6 @@ export class PluginChain extends ChainedMap<MarkdownChain> {
     if ('args' in obj) {
       this.set('args', obj.args)
     }
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     return super.merge(obj, [...omit, 'args', 'plugin', 'before', 'after'])
   }
 
@@ -121,8 +117,6 @@ export class MarkdownChain {
 
   constructor() {
     this.options = new OptionsChain(this)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     this.plugins = new ChainedMap(this)
   }
 

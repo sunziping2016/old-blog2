@@ -153,6 +153,18 @@ export class PageApi {
     await page.onInvalidated()
   }
 
+  keys(): string[] {
+    return Object.keys(this.pages)
+  }
+
+  values(): Page[] {
+    return Object.values(this.pages)
+  }
+
+  entries(): Array<[string, Page]> {
+    return Object.entries(this.pages)
+  }
+
   has(id: string): boolean {
     return this.pages[id] !== undefined
   }

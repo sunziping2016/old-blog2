@@ -6,6 +6,9 @@ import aliasesPlugin from './aliases'
 import indexHtmlPlugin from './indexHtml'
 import { SiteConfig, UserConfigPlugins } from '../config'
 import vuePlugin, { VuePluginOptions } from './vue'
+import routerDataPlugin from './routerData'
+import defaultThemePlugin from './defaultTheme'
+import layoutPlugin from '../layout'
 
 export default function internalPlugins(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -15,6 +18,9 @@ export default function internalPlugins(
     aliasesPlugin,
     indexHtmlPlugin,
     enhanceAppPlugin,
+    routerDataPlugin,
+    defaultThemePlugin,
+    layoutPlugin,
     markdownPluginsPlugin,
     markdownPageProviderPlugin,
     markdownPageLoaderPlugin,

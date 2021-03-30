@@ -25,6 +25,13 @@ declare module '@md/content/*' {
   export default comp
 }
 
+declare module '@routerData' {
+  import { Ref } from 'vue'
+  import { RouterSettings } from '@types'
+  const data: Ref<Record<string, RouterSettings>>
+  export default data
+}
+
 declare module '@siteData' {
   import { SiteData } from '@types'
   const data: SiteData
@@ -44,7 +51,7 @@ declare module '@enhanceApps' {
   export default enhanceApps
 }
 
-declare module '@theme/*' {
+declare module '@layout/*' {
   import { ComponentOptions } from 'vue'
   const comp: ComponentOptions
   export default comp

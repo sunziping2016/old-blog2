@@ -1,3 +1,5 @@
+import { ComponentOptions } from 'vue'
+
 export type HeadConfig =
   | [string, Record<string, string>]
   | [string, Record<string, string>, string]
@@ -30,6 +32,10 @@ export interface RouterSettings {
   layout: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: Record<string, any>
+}
+
+export interface ResolvedRouterSettings extends RouterSettings {
+  resolvedLayout: ComponentOptions
 }
 
 export interface Header {
