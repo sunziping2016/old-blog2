@@ -1,13 +1,13 @@
 import 'vite/dynamic-import-polyfill'
 
 import { App, createApp as createClientApp, createSSRApp, h } from 'vue'
+import { Router } from 'vue-router'
 import GlobalLayout from '@layout/GlobalLayout'
+import Content from '@layout/Content'
 import siteData from '@siteData'
-import Content from './Content'
 import enhanceApps from '@enhanceApps'
 import createRouter from './router'
 import { inBrowser } from './utils'
-import { Router } from 'vue-router'
 
 function newApp(): App {
   const app = {

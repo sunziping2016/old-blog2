@@ -17,6 +17,7 @@ import { convertRouterLinkPlugin } from './link'
 import { createContainer } from './containers'
 import container from 'markdown-it-container'
 import Token from 'markdown-it/lib/token'
+import path from 'path'
 
 export interface MarkdownParsedData {
   hoistedTags?: string[]
@@ -122,7 +123,17 @@ const markdownPluginsPlugin: VitepressPlugin<never> = {
         }
       ])
       .end()
-  }
+  },
+  layoutFiles: {
+    OutboundLink: path.resolve(
+      __dirname,
+      '../../../client/markdownPlugins/OutboundLink.vue'
+    )
+  },
+  enhanceAppFiles: path.resolve(
+    __dirname,
+    '../../../client/markdownPlugins/enhanceApp.js'
+  )
 }
 
 export default markdownPluginsPlugin
