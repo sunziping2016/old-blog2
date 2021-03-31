@@ -27,8 +27,8 @@ declare module '@md/content/*' {
 
 declare module '@routerData' {
   import { Ref } from 'vue'
-  import { RouterSettings } from '@types'
-  const data: Ref<Record<string, RouterSettings>>
+  import { ResolvedRouterSettings } from '@types'
+  const data: Ref<Record<string, ResolvedRouterSettings>>
   export default data
 }
 
@@ -39,13 +39,13 @@ declare module '@siteData' {
 }
 
 declare module '@enhanceApps' {
-  import { App, Ref } from 'vue'
+  import { App } from 'vue'
   import { Router } from 'vue-router'
   import { SiteData } from '@types'
   function enhanceApps(
     app: App,
     router: Router,
-    siteData: Ref<SiteData>,
+    siteData: SiteData,
     isServer: boolean
   ): Promise<void>
   export default enhanceApps

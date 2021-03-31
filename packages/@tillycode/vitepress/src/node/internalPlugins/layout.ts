@@ -1,4 +1,4 @@
-import { PluginApi, VitepressPluginOption } from './plugin'
+import { PluginApi, VitepressPluginOption } from '../plugin'
 import winston from 'winston'
 
 const LAYOUT_RE = /^\/@layout\/(.+)$/

@@ -46,7 +46,7 @@ export interface MarkdownPageContentData {
 }
 
 function generatePageId(routerPath: string): string {
-  return `md.${routerPath.slice(1, -1).replace(/\//g, '_')}`
+  return `${routerPath.slice(1, -1).replace(/\//g, '_')}.md`
 }
 
 function relativePathToRouterPath(relativePath: string): string {
@@ -169,7 +169,10 @@ export class MarkdownPage extends Page {
     const basic = await this.ensureBasic()
     return {
       routerPath: this.page.path,
-      layout: basic.frontmatter.layout || 'Layout'
+      layout: basic.frontmatter.layout || 'Layout',
+      meta: {
+        content: `/@md/content/${this.id}`
+      }
     }
   }
 }

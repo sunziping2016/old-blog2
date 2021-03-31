@@ -8,7 +8,8 @@ import { SiteConfig, UserConfigPlugins } from '../config'
 import vuePlugin, { VuePluginOptions } from './vue'
 import routerDataPlugin from './routerData'
 import defaultThemePlugin from './defaultTheme'
-import layoutPlugin from '../layout'
+import layoutPlugin from './layout'
+import siteDataPlugin from './siteData'
 
 export default function internalPlugins(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -19,6 +20,7 @@ export default function internalPlugins(
     indexHtmlPlugin,
     enhanceAppPlugin,
     routerDataPlugin,
+    siteDataPlugin,
     defaultThemePlugin,
     layoutPlugin,
     markdownPluginsPlugin,

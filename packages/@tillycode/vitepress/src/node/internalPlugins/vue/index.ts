@@ -1,3 +1,4 @@
+// Synchronized with plugin-vue@aaa1efbd4959104ab7396c35a3398e7de14a5c91
 import { PluginApi, VitepressPluginOption } from '../../plugin'
 import { createFilter } from '@rollup/pluginutils'
 import { SFCBlock } from '@vue/compiler-sfc'
@@ -52,11 +53,12 @@ export default function vuePlugin(
       }
       return handleHotUpdate(ctx, options)
     },
-    config() {
+    config(config) {
       return {
         define: {
           __VUE_OPTIONS_API__: true,
-          __VUE_PROD_DEVTOOLS__: false
+          __VUE_PROD_DEVTOOLS__: false,
+          ...config.define
         },
         ssr: {
           external: ['vue', '@vue/server-renderer']

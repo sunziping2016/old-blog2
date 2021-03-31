@@ -77,19 +77,28 @@ export default function routerDataPlugin(
     },
     configureServer: async (server) => {
       const handler = new RouterDataHotUpdateHandler(this, server.ws)
+      const invalidate = (): void => {
+        const module = server.moduleGraph.getModuleById(ROUTER_DATA_ID)
+        if (module !== undefined) {
+          server.moduleGraph.invalidateModule(module)
+        }
+      }
       this.pageApi.on('add', (page) => {
         if (initialized) {
           handler.handleUpdated(page.id)
+          invalidate()
         }
       })
       this.pageApi.on('invalidate', (page) => {
         if (initialized) {
           handler.handleUpdated(page.id)
+          invalidate()
         }
       })
       this.pageApi.on('remove', (page) => {
         if (initialized) {
           handler.handleRemoved(page.id)
+          invalidate()
         }
       })
     },
@@ -106,13 +115,13 @@ export default function routerDataPlugin(
           [...layouts]
             .map((layout) => `import _${layout} from '/@layout/${layout}'\n`)
             .join('') +
-          'import { ref } from "vue"\n\n' +
+          'import { ref, markRaw } from "vue"\n\n' +
           'const data = ref({\n' +
           Object.entries(data)
             .map(
               ([id, settings]) =>
                 `  '${id}': Object.assign({\n` +
-                `    resolvedLayout: _${settings.layout}\n` +
+                `    resolvedLayout: markRaw(_${settings.layout})\n` +
                 `  }, ${JSON.stringify(settings)}),\n`
             )
             .join('') +
@@ -121,16 +130,17 @@ export default function routerDataPlugin(
           'if (import.meta.hot) {\n' +
           `  import.meta.hot.on('${ROUTER_DATA_EVENT}', (newData) => {\n` +
           '    (async () => {\n' +
-          '      console.log(newData)\n' +
           '      for (const newPage of Object.values(newData.updated)) {\n' +
-          '        newPage.resolveLayout = (await import(/* @vite-ignore */ "/@layout/" + newPage.layout)).default\n' +
+          '        newPage.resolvedLayout = (await import(/* @vite-ignore */ "/@layout/" + newPage.layout)).default\n' +
           '      }\n' +
+          '      const temp = Object.assign({}, data.value)\n' +
           '      Object.entries(newData.updated).forEach(([id, settings]) => {\n' +
-          '        data.value[id] = settings\n' +
+          '        temp[id] = settings\n' +
           '      })\n' +
           '      newData.removed.forEach((id) => {\n' +
-          '        delete data.value[id]\n' +
+          '        delete temp[id]\n' +
           '      })\n' +
+          '      data.value = temp\n' +
           '    })().catch((err) => console.error(err))\n' +
           '  })\n' +
           '}\n'
